@@ -1,2 +1,2 @@
-# forum
-Projet du cours Projet Transversal 1
+# Forum de Discussions Structurées
+  Projet du cours Projet Transversal 1
