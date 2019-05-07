@@ -1,59 +1,50 @@
 let express = require('express');
 let app = express();
-let db = require('./db.js');
+let db = require('./database/db.js');
 let bodyParser = require('body-parser');
+let session = require('express-session');
+var path = require('path');
+
+
+app.use(require('./routes/users'));
+app.use(require('./routes/themes'));
+app.use(require('./routes/posts'));
 
 
 
-app.use(bodyParser.json())
-.use(bodyParser.urlencoded({ extended: true }))
+app.use(session({
+    secret: 'secret',
+    resave: true,
+    saveUninitialized: true
+}));
 
-.get('/', function(req, res){
-    res.setHeader('Content-Type', 'text/plain');
-    res.send('Hello World!')
-})
+app.use(bodyParser.urlencoded({ extended: true }))
+    .use(bodyParser.json())
 
-.get('/posts', function(req, res){
-    db.query(
-        'SELECT * FROM posts',
-        function(err, rows){
-            if (err){
-                res.sendStatus(500);
-                res.end()
+
+
+app.post('/auth', function (request, response) {
+    var username = request.body.username;
+    var password = request.body.password;
+    if (username && password) {
+        connection.query('SELECT * FROM ?? WHERE username = ? AND password = ?', ["users",username, password], function (error, results, fields) {
+            if (results.length > 0) {
+                request.session.loggedin = true;
+                request.session.username = username;
+                response.redirect('/home');
+            } else {
+                response.send('Incorrect Username and/or Password!');
             }
-
-            var posts = rows.map((row) => {
-                return 
-            })
-
-            res.send(rows)
-        }
-    )
-})
-
-.get('/users', function(req,res){
-    db.query(
-        'SELECT * FROM user',
-        function (err, rows) {
-            if (err) {
-                res.sendStatus(500);
-                res.end()
-            }
-
-            var users = rows.map((row) => {
-                return
-            })
-
-            res.send(rows)
-        }
-    )
+            response.end();
+        });
+    } else {
+        response.send('Please enter Username and Password!');
+        response.end();
+    }
 })
 
 
-.use(function (req, res, next) {
-    res.setHeader('Content-Type', 'text/plain');
-    res.status(404).send('Page introuvable !');
-})
+
 
 .listen(3000, function () {//App sur le port 4000
     console.log('Server port 3000')
