@@ -26,23 +26,23 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 
 
-app.post('/auth', function (request, response) {
-    var username = request.body.username;
-    var password = request.body.password;
+app.post('/auth', function (req, res) {
+    var username = req.body.username;
+    var password = req.body.password;
     if (username && password) {
-        connection.query('SELECT * FROM ?? WHERE username = ? AND password = ?', ["users",username, password], function (error, results, fields) {
-            if (results.length > 0) {
-                request.session.loggedin = true;
-                request.session.username = username;
-                response.redirect('/home');
+        connection.query('SELECT * FROM ?? WHERE username = ? AND password = ?', ["users",username, password], function (err, rows, fields) {
+            if (rows.length > 0) {
+                req.session.loggedin = true;
+                req.session.username = username;
+                res.redirect('/home');
             } else {
-                response.send('Incorrect Username and/or Password!');
+                res.send('Incorrect Username and/or Password!');
             }
-            response.end();
+            res.end();
         });
     } else {
-        response.send('Please enter Username and Password!');
-        response.end();
+        res.send('Please enter Username and Password!');
+        res.end();
     }
 })
 
