@@ -3,12 +3,15 @@ let app = express();
 let db = require('./database/db.js');
 let bodyParser = require('body-parser');
 let session = require('express-session');
-var path = require('path');
 
 
+
+app.use(require('./routes/index'));
 app.use(require('./routes/users'));
 app.use(require('./routes/themes'));
 app.use(require('./routes/posts'));
+app.use(require('./routes/comments'));
+
 
 
 
@@ -44,6 +47,10 @@ app.post('/auth', function (request, response) {
 })
 
 
+.use(function (req, res, next) {
+    res.setHeader('Content-Type', 'text/plain');
+    res.status(404).send('Page introuvable !');
+})
 
 
 .listen(3000, function () {//App sur le port 4000
