@@ -75,19 +75,97 @@ router.route('/post/:postID') //post avec ses commentaires
         })
     });
 
+//Seulement les commentaires 'racine', ceux qui n'ont pas de parents
+router.get('/post/:postID/comments', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('SELECT comments.* FROM ??, ?? WHERE posts.post_id = comments.post_id AND comments.comment_id_parent = NULL AND comments.post_id = ?',
+        ['comments', 'posts', req.params.postID], function (err, rows) {
+            if (err) {
+                res.sendStatus(500);
+                res.end()
+            }
+            res.json(rows)
+        })
+})
+
+    
+
+router.get('post/:postID/upvotes', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('SELECT count(post_vote.*) FROM ??, ?? WHERE posts.post_id = post_vote.post_id AND post_vote.post_id = ? AND post_vote.upvote = 1',
+        ['posts','post_vote', req.params.postID], function(err, rows){
+        if (err) {
+            res.sendStatus(500);
+            res.end;
+        }
+        res.send(rows)
+    })
+})
+
+router.get('post/:postID/downvotes', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('SELECT count(post_vote.*) FROM ??, ?? WHERE posts.post_id = post_vote.post_id AND post_vote.post_id = ? AND post_vote.upvote = 0',
+        ['posts', 'post_vote', req.params.postID], function (err, rows) {
+            if (err) {
+                res.sendStatus(500);
+                res.end;
+            }
+            res.send(rows)
+        })
+})
+
+router.post('post/:postID/vote', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('INSERT INTO post_vote(??, ??, ??) VALUES (?, ?, ?)', 
+        ['upvote', 'username', 'post_id', req.body.upvote, req.body.usernamePost, req.body.postID], function (err, rows) {
+            if (err) {
+                res.sendStatus(500);
+                res.end;
+            }
+            res.send(rows)
+        }) 
+    
+
+    
+})
+
+
 router.post('/createPost', (req, res) => {
     console.log('method ', req.method);
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?)',
-        ['posts', 'username', 'theme', 'title', 'content', req.body.username, req.body.postTheme, req.body.postTitle, req.body.postContent], function(err, rows){
+        ['posts', 'username', 'theme', 'title', 'content', req.body.usernamePost, req.body.postTheme, req.body.postTitle, req.body.postContent], function(err, rows){
         if (err) {
             res.sendStatus(500);
             res.end;
         }
-        console.log(rows.insertID)
+        console.log('posttID créé', rows.insertID)
         res.send(rows)
 
+    })
+})
+
+router.post('/createChildPost', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('',
+    [], function(err, rows){
+        if (err) {
+            res.sendStatus(500);
+            res.end;
+        }
+        console.log('posttID créé', rows.insertID)
+        res.send(rows)
     })
 })
 

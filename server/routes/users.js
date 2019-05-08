@@ -83,6 +83,19 @@ router.get('/user/:username/posts', (req, res) => {
         })
 })
 
-
+//:username/votes , pour montrer les votes votés par l'utilisateur :username
+router.get('/user/:username/votes', (req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('',
+    [], function(err, rows){
+        if (err) {
+            res.sendStatus(500);
+            res.end()
+        }
+        res.json(rows);
+    })
+})
 
 module.exports = router;
