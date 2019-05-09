@@ -1,7 +1,8 @@
 let express = require('express');
 let db = require('../database/db');
-let bodyParser = require('body-parser');
+//let bodyParser = require('body-parser');
 let router = express.Router();
+
 
 
 router.get('/posts', (req, res) => {
@@ -90,7 +91,19 @@ router.get('/post/:postID/comments', (req, res) => {
         })
 })
 
-    
+router.get('/post/:postID/vote',(req, res) => {
+    console.log('method ', req.method);
+    console.log('path: ', req.route.path);
+    console.log('query: ', req.query);
+    db.query('SELECT post_vote.* FROM ??, ??, ?? WHERE post_vote.username = users.username AND post_vote.post_id = posts.post_id AND post_vote.post_id = ? AND post_vote.username = ?',
+    ['posts', 'post_vote', 'users', req.params.postID, req.body.loggedUser], function(err, rows){
+        if(err){
+            res.sendStatus(500);
+            res.end()
+        }
+        res.json(rows)
+    })
+})
 
 router.get('post/:postID/upvotes', (req, res) => {
     console.log('method ', req.method);
@@ -125,7 +138,7 @@ router.post('post/:postID/vote', (req, res) => {
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     db.query('INSERT INTO post_vote(??, ??, ??) VALUES (?, ?, ?)', 
-        ['upvote', 'username', 'post_id', req.body.upvote, req.body.usernamePost, req.body.postID], function (err, rows) {
+        ['upvote', 'username', 'post_id', req.body.upvote, req.body.loggedUser, req.body.postID], function (err, rows) {
             if (err) {
                 res.sendStatus(500);
                 res.end;
@@ -142,13 +155,16 @@ router.post('/createPost', (req, res) => {
     console.log('method ', req.method);
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
-    db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?)',
-        ['posts', 'username', 'theme', 'title', 'content', req.body.usernamePost, req.body.postTheme, req.body.postTitle, req.body.postContent], function(err, rows){
+    console.log('body: ', req.body)
+    //var postData = req.body
+    db.query('INSERT INTO ??(??, ??, ??, ??) VALUES ?',
+        ['posts', 'username', 'theme', 'title', 'content', req.body/*req.body.username, req.body.postTheme, req.body.postTitle, req.body.postContent*/], function(err, rows, fields){
         if (err) {
+            console.log(err)
             res.sendStatus(500);
             res.end;
         }
-        console.log('posttID créé', rows.insertID)
+        //console.log('postID créé', rows.insertedId)
         res.send(rows)
 
     })

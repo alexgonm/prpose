@@ -118,7 +118,7 @@ router.post('comment/:commentID/vote', (req, res) => {
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     db.query('INSERT INTO comment_vote(??, ??, ??) VALUES (?, ?, ?)',
-        ['upvote', 'username', 'comment_id', req.body.upvote, req.body.usernameComment, req.body.commentID], function (err, rows) {
+        ['upvote', 'username', 'comment_id', req.body.upvote, req.body.loggedUser, req.body.commentID], function (err, rows) {
             if (err) {
                 res.sendStatus(500);
                 res.end;
@@ -136,7 +136,7 @@ router.post('/createComment', (req, res) => {
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
-        ['comments', 'username', 'post_id', 'content', req.body.username, req.body.commentPost, req.body.commentContent], function (err, rows) {
+        ['comments', 'username', 'post_id', 'content', req.body.loggedUser, req.body.commentPost, req.body.commentContent], function (err, rows) {
             if (err) {
                 res.sendStatus(500);
                 res.end()
@@ -151,7 +151,7 @@ router.post('/createChildComment', (req, res) => {
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
-        ['comments', 'username', 'post_id', 'comment_id_parent', 'content', req.body.username, req.body.commentPost, req.body.commentParent ,req.body.commentContent], function (err, rows) {
+        ['comments', 'username', 'post_id', 'comment_id_parent', 'content', req.body.loggedUser, req.body.commentPost, req.body.commentParent ,req.body.commentContent], function (err, rows) {
             if (err) {
                 res.sendStatus(500);
                 res.end()

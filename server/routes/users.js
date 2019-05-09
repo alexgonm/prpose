@@ -10,10 +10,10 @@ router.get('/login', (req, res) => {
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
     res.setHeader('Content-type', 'text/html');
-    res.sendFile(path.join(__dirname + '/login.html'));
+    res.sendFile(path.join(__dirname, '/../login.html'));
 })
 
-.get('/register', (req, res) =>{
+.get('/register', (req, res) => {
     console.log('method ', req.method);
     console.log('path: ', req.route.path);
     console.log('query: ', req.query);
