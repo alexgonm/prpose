@@ -1,6 +1,5 @@
 let express = require('express');
 let db = require('../database/db');
-let bodyParser = require('body-parser');
 let router = express.Router();
 
 

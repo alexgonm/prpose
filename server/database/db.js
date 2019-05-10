@@ -6,7 +6,8 @@ var pool = mysql.createPool({
     user: "A7",
     password: "vV3TtCoonciqOJOb",
     database: "A7",
-    dateStrings: true
+    dateStrings: true,
+    supportBigNumbers: true
 });
 
 pool.getConnection((function (err, connection) {
