@@ -10,8 +10,8 @@ const BCRYPT_SALT_ROUNDS = 10;
 router.get('/', function (req, res) {
     const method = req.method; const routePath = req.route.path; const query = req.query;
     console.log({ method, routePath, query });
-    res.setHeader('Content-Type', 'text/plain');
-    res.send('PrPose')
+    res.setHeader('Content-Type', 'text/html');
+    res.send('<h1>PrPose</h1>')
 })
 
 router.route('/login')
@@ -21,18 +21,11 @@ router.route('/login')
         res.setHeader('Content-type', 'text/html');
         res.sendFile(path.join(__dirname, '/../login.html'));
     })
-
-    .post(function (req, res) {
+    .post((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
         var username = req.body.username;
-        var password = req.body.password;        bcrypt.compare('somePassword', hash, function (err, res) {
-            if (res) {
-                // Passwords match
-            } else {
-                // Passwords don't match
-            }
-        });
+        var password = req.body.password;        
         if (username && password) {
             bcrypt.compare(password, hash, function (error, result) {
                 if (result) {
@@ -44,6 +37,7 @@ router.route('/login')
                         res.redirect('/');
                     } else {
                         res.send('Incorrect Username and/or Password!');
+                        setTimeout( () => { res.redirect('/login'); }, 3000);
                     }
                     res.end();
                     });
@@ -57,7 +51,7 @@ router.route('/login')
     })
 
 router.route('/signup')
-    .get( (req, res) => {
+    .get((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
         res.end()
@@ -75,20 +69,23 @@ router.route('/signup')
             if (rows.length > 0){
                 res.send('<p>Username/email already used.</p>');
             }
-        })
-        bcrypt.hash(psw, BCRYPT_SALT_ROUNDS, function (err, hash) {
-            db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
-                ['username', 'email', 'password', 'age', 'biography', usr, email, hash, age, bio], function (err, rows) {
-                    if (err) {
-                        console.log(err)
-                        res.sendStatus(500);
-                        res.end()
-                    }
-                    res.send('<p>Nice, you\'ve signed up. Welcome to PrPose.</p>')
-                    //res.redirect('/');
+            else{
+                bcrypt.hash(psw, BCRYPT_SALT_ROUNDS, function (err, hash) {
+                    db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
+                        ['username', 'email', 'password', 'age', 'biography', usr, email, hash, age, bio], function (err, rows) {
+                            if (err) {
+                                console.log(err)
+                                res.sendStatus(500);
+                                res.end()
+                            }
+                            res.send('<p>Nice, you\'ve signed up. Welcome to PrPose.</p>')
+                            //res.redirect('/');
 
-                })
+                        })
         });
+            }
+        })
+        
         //res.end()
     }) 
 

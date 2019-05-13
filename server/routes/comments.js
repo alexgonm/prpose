@@ -3,7 +3,6 @@ const db = require('../database/db');
 const router = express.Router();
 
 
-
 router.get('/comments', (req, res) => {
     console.log('method ', req.method);
     console.log('path: ', req.route.path);

@@ -7,7 +7,7 @@ router.get('/users', (req, res) => {
     const method = req.method; const routePath = req.route.path; const query = req.query;
     console.log({ method, routePath, query });
     db.query(
-        'SELECT ??, ??, ??, ??, ?? FROM ??',
+        'SELECT ??, ??, ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
         ['username', 'age', 'creation_date', 'creation_hour', 'biography', 'users'], function (err, rows) {
             if (err) {
                 res.sendStatus(500);
