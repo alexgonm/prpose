@@ -6,8 +6,8 @@ const session = require('express-session');
 const PORT = process.env.PORT || 3000;
 const SESS_ID = 'sid'
 const SESS_SECRET = 's1nGegaRdi3n'
-const ENV = "development"
-const SESS_SECURE = ENV === "production"
+const NODE_ENV = process.env.NODE_ENV || "development"
+const SESS_SECURE = NODE_ENV === "production"
 
 app.use(bodyParser.urlencoded({ extended: true }))
     .use(bodyParser.json())

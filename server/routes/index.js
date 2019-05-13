@@ -21,29 +21,31 @@ router.route('/login')
         res.setHeader('Content-type', 'text/html');
         res.sendFile(path.join(__dirname, '/../login.html'));
     })
-    .post((req, res) => {
+    .post(async (req, res, next) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
         var username = req.body.username;
         var password = req.body.password;        
         if (username && password) {
-            bcrypt.compare(password, hash, function (error, result) {
-                if (result) {
-                    // Passwords match
-                    db.query('SELECT * FROM ?? WHERE username = ? AND password = ?', ["users", username, hash], function (err, rows, fields) {
-                    if (rows.length > 0) {
-                        //req.session.loggedIn = true;
-                        //req.session.username = username;
-                        res.redirect('/');
-                    } else {
-                        res.send('Incorrect Username and/or Password!');
-                        setTimeout( () => { res.redirect('/login'); }, 3000);
-                    }
-                    res.end();
+            db.query('SELECT * FROM ?? WHERE username = ?', ["users", username], function (err, rows, fields) {
+                if (rows.length > 0) {
+                    var hash = rows.map( row => {
+                        return row.password
+                    })
+                    //console.log(userHash[0])
+                    bcrypt.compare(password, hash[0]).then(function(result){
+                        console.log("u")
+                        if (result) {
+                            //TODO: Faire les bails de session
+                            res.redirect('/'); 
+                        }
+                        else {
+                            res.send('Incorrect Username and/or Password!');
+                            //setTimeout(() => { res.redirect('/login'); }, 3000);
+                        }
                     });
-                }
+                } 
             });
-            
         } else {
             res.send('Please enter Username and Password!');
             res.end();
@@ -56,23 +58,27 @@ router.route('/signup')
         console.log({ method, routePath, query });
         res.end()
     })
-    .post((req, res) => {
+    .post( (req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
-        const usr = req.body.username
+        const user = req.body.username
         const email = req.body.email
         const psw = req.body.password
         const age = req.body.age
         const bio = req.body.biography
         db.query('SELECT users.username FROM users WHERE users.username = ? OR users.email = ?', 
-        [usr, email], function(err, rows){
-            if (rows.length > 0){
+        [user, email], function(err, rows){
+            if (err){
+                res.sendStatus(500);
+                res.end()
+            } 
+            else if (rows.length > 0){
                 res.send('<p>Username/email already used.</p>');
             }
             else{
-                bcrypt.hash(psw, BCRYPT_SALT_ROUNDS, function (err, hash) {
-                    db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
-                        ['username', 'email', 'password', 'age', 'biography', usr, email, hash, age, bio], function (err, rows) {
+                const hash = bcrypt.hash(psw, BCRYPT_SALT_ROUNDS)
+                db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
+                        ['username', 'email', 'password', 'age', 'biography', user, email, hash, age, bio], function (err, rows) {
                             if (err) {
                                 console.log(err)
                                 res.sendStatus(500);
@@ -82,7 +88,7 @@ router.route('/signup')
                             //res.redirect('/');
 
                         })
-        });
+        
             }
         })
         
@@ -90,7 +96,7 @@ router.route('/signup')
     }) 
 
 router.get('/logout', (req, res) => {
-
+    //TODO: 
 })
 
 
