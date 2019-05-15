@@ -18,10 +18,15 @@ router.route('/login')
     .get((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
-        res.setHeader('Content-type', 'text/html');
-        res.sendFile(path.join(__dirname, '/../login.html'));
+        if (!req.session.isLoggedIn){
+            res.setHeader('Content-type', 'text/html');
+            res.sendFile(path.join(__dirname, '/../login.html'));
+        }
+        else{
+            res.redirect('/')
+        }
     })
-    .post(async (req, res, next) => {
+    .post((req, res, next) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
         var username = req.body.username;
@@ -33,11 +38,15 @@ router.route('/login')
                         return row.password
                     })
                     //console.log(userHash[0])
-                    bcrypt.compare(password, hash[0]).then(function(result){
-                        console.log("u")
+                    bcrypt.compare(password, hash[0]).then((result) => {
                         if (result) {
-                            //TODO: Faire les bails de session
-                            res.redirect('/'); 
+                            req.session.username = username;
+                            req.session.isLoggedIn = true;
+                            //console.log([req.session.username, req.session.isLoggedIn])
+                            req.session.save((err) => {
+                                // session saved
+                                res.redirect('/')
+                            })
                         }
                         else {
                             res.send('Incorrect Username and/or Password!');
@@ -58,14 +67,10 @@ router.route('/signup')
         console.log({ method, routePath, query });
         res.end()
     })
-    .post( (req, res) => {
+    .post((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
-        const user = req.body.username
-        const email = req.body.email
-        const psw = req.body.password
-        const age = req.body.age
-        const bio = req.body.biography
+        const user = req.body.username; const email = req.body.email; const psw = req.body.password; const age = req.body.age; const bio = req.body.biography;
         db.query('SELECT users.username FROM users WHERE users.username = ? OR users.email = ?', 
         [user, email], function(err, rows){
             if (err){
@@ -96,7 +101,18 @@ router.route('/signup')
     }) 
 
 router.get('/logout', (req, res) => {
-    //TODO: 
+    if (!req.session.isLoggedIn){
+        res.redirect('/')
+    }
+    else{
+        req.session.destroy((err) => {
+            if (err) {
+                return console.log(err);
+            }
+            res.redirect('/');
+        });
+    }
+    
 })
 
 

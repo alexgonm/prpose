@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../database/db');
 const router = express.Router();
 
+//TODO: regler le probleme de session (il faut que ca soit bien l'utlisateur connecté qui puisse faire ca)
 
 router.get('/comments', (req, res) => {
     console.log('method ', req.method);

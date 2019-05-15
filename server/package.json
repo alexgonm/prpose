@@ -4,7 +4,6 @@
   "description": "Projet Tranversal 1 server",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js"
   },
   "repository": {
@@ -19,9 +18,12 @@
   "dependencies": {
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.3",
+    "connect-redis": "^3.4.1",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "express-session": "^1.16.1",
     "mysql": "^2.16.0",
-    "nodemon": "^1.18.10"
+    "nodemon": "^1.18.10",
+    "redis": "^2.8.0"
   }
 }
