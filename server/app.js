@@ -53,10 +53,9 @@ app.use(require('./routes/comments'));
 
 
 app.use((req, res, next) => {
-        res.setHeader('Content-Type', 'text/html');
-        res.status(404).send('<h3>Uh-Oh! There seems to be something wrong.</h3>');
+        res.sendStatus(404)
     })
 
     .listen( PORT, () => {//App sur le port 4000
-        console.log('Server port ${PORT}')
+        console.log('Server port', PORT)
     });
