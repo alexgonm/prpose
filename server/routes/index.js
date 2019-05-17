@@ -10,8 +10,8 @@ const BCRYPT_SALT_ROUNDS = 10;
 router.get('/', function (req, res) {
     const method = req.method; const routePath = req.route.path; const query = req.query;
     console.log({ method, routePath, query });
-    res.setHeader('Content-Type', 'text/html');
-    res.send('<h1>PrPose</h1>')
+    //res.setHeader('Content-Type', 'text/html');
+    res.sendStatus(200)
 })
 
 router.route('/login')
@@ -34,10 +34,11 @@ router.route('/login')
         if (username && password) {
             db.query('SELECT * FROM ?? WHERE username = ?', ["users", username], function (err, rows, fields) {
                 if (rows.length > 0) {
+                    
                     var hash = rows.map( row => {
                         return row.password
                     })
-                    //console.log(userHash[0])
+                    //console.log(hash[0])
                     bcrypt.compare(password, hash[0]).then((result) => {
                         if (result) {
                             req.session.username = username;
@@ -45,19 +46,19 @@ router.route('/login')
                             //console.log([req.session.username, req.session.isLoggedIn])
                             req.session.save((err) => {
                                 // session saved
-                                res.redirect('/')
+                                res.sendStatus(200)
                             })
                         }
                         else {
-                            res.send('Incorrect Username and/or Password!');
+                            res.sendStatus(401);
                             //setTimeout(() => { res.redirect('/login'); }, 3000);
                         }
                     });
                 } 
             });
         } else {
-            res.send('Please enter Username and Password!');
-            res.end();
+            //res.send('Please enter Username and Password!');
+            res.sendStatus();
         }
     })
 
@@ -65,37 +66,47 @@ router.route('/signup')
     .get((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
-        res.end()
+        if (!req.session.isLoggedIn)
+            res.sendStatus(200)
+        else {
+            res.sendStatus(403)
+        }
     })
     .post((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
-        const user = req.body.username; const email = req.body.email; const psw = req.body.password; const age = req.body.age; const bio = req.body.biography;
-        db.query('SELECT users.username FROM users WHERE users.username = ? OR users.email = ?', 
-        [user, email], function(err, rows){
-            if (err){
-                res.sendStatus(500);
-                res.end()
-            } 
-            else if (rows.length > 0){
-                res.send('<p>Username/email already used.</p>');
-            }
-            else{
-                const hash = bcrypt.hash(psw, BCRYPT_SALT_ROUNDS)
-                db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
-                        ['username', 'email', 'password', 'age', 'biography', user, email, hash, age, bio], function (err, rows) {
-                            if (err) {
-                                console.log(err)
-                                res.sendStatus(500);
-                                res.end()
-                            }
-                            res.send('<p>Nice, you\'ve signed up. Welcome to PrPose.</p>')
-                            //res.redirect('/');
+        if (!req.session.isLoggedIn){
+            const user = req.body.username; const email = req.body.email; const psw = req.body.password; const age = req.body.age; const bio = req.body.biography;
+            db.query('SELECT users.username FROM users WHERE users.username = ? OR users.email = ?',
+                [user, email], function (err, rows) {
+                    if (err) {
+                        res.sendStatus(500);
+                        res.end()
+                    }
+                    else if (rows.length > 0) {
+                        res.sendStatus(409)//('Username/email already used.');
+                    }
+                    else {
+                        const hash = bcrypt.hash(psw, BCRYPT_SALT_ROUNDS)
+                        db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
+                            ['username', 'email', 'password', 'age', 'biography', user, email, hash, age, bio], function (err, rows) {
+                                if (err) {
+                                    console.log(err)
+                                    res.sendStatus(500);
+                                    res.end()
+                                }
+                                res.sendStatus(200)//('Nice, you\'ve signed up. Welcome to PrPose.')
+                                //res.redirect('/');
 
-                        })
+                            })
+
+                    }
+                })
+        }
+        else {
+            res.sendStatus(403)
+        }
         
-            }
-        })
         
         //res.end()
     }) 
@@ -114,6 +125,8 @@ router.get('/logout', (req, res) => {
     }
     
 })
+
+
 
 
 module.exports = router;

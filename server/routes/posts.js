@@ -31,11 +31,6 @@ router.route('/post/:postID') //post avec ses commentaires
                     res.sendStatus(500);
                     res.end()
                 }
-
-                var posts = rows.map((row) => {
-                    return
-                })
-
                 res.json(rows)
             })
     })
@@ -49,7 +44,6 @@ router.route('/post/:postID') //post avec ses commentaires
                     res.sendStatus(500);
                     res.end()
                 }
-
                 res.json(rows)
             }
         )
@@ -152,7 +146,7 @@ router.post('/createPost', (req, res, next) => {//TODO: regler le probleme de se
     console.log('body: ', req.body)
     if (req.session.isLoggedIn){
         db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
-            ['posts', 'username', 'theme', 'title', 'content', req.body.username, req.body.postTheme, req.body.postTitle, req.body.postContent], function (err, rows, fields) {
+            ['posts', 'username', 'theme', 'title', 'content', req.session.username, req.body.postTheme, req.body.postTitle, req.body.postContent], function (err, rows, fields) {
                 if (err) {
                     console.log(err)
                     res.sendStatus(500);
