@@ -1,0 +1,4 @@
+server/node_modules
+sonar-project.properties
+.scannerwork
+.sonarlint
