@@ -16,6 +16,7 @@
     "url": "https://github.com/granpepito/prpose/issues"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.3",
     "connect-redis": "^3.4.1",
