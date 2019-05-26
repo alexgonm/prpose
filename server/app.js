@@ -30,7 +30,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        maxAge: 600000,
+        maxAge: 600000000,
         sameSite: true,
         secure: SESS_SECURE,
     },
@@ -42,6 +42,7 @@ app.use(session({
 }));
 
 app.use(cors({
+    //TODO: 
     credentials: true,
 }));
 

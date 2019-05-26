@@ -14,7 +14,7 @@ router.get('/', function (req, res) {
     res.sendStatus(200)
 })
 
-router.route('/login')
+.route('/login')
     .get((req, res) => {
         const method = req.method; const routePath = req.route.path; const query = req.query;
         console.log({ method, routePath, query });
@@ -60,7 +60,7 @@ router.route('/login')
             //res.send('Please enter Username and Password!');
             res.sendStatus(400);
         }
-    })
+    }),
 
 router.route('/signup')
     .get((req, res) => {
@@ -106,25 +106,22 @@ router.route('/signup')
         else {
             res.sendStatus(403)
         }
-        
-        
-        //res.end()
-    }) 
+    });
 
 router.get('/logout', (req, res) => {
     if (!req.session.isLoggedIn){
-        res.redirect('/')
+        res.sendStatus(401)
     }
     else{
         req.session.destroy((err) => {
             if (err) {
                 return console.log(err);
             }
-            res.redirect('/');
+            res.sendStatus(200)
         });
     }
     
-})
+});
 
 
 

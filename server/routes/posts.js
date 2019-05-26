@@ -14,7 +14,6 @@ const instance = axios.create({
 
 router.get('/all', (req, res) => {
     if (req.query.sort){
-        console.log('onjo')
         switch (req.query.sort) {
             case 'new':
                     db.query('SELECT * FROM ?? ORDER BY ?? DESC',
@@ -26,9 +25,14 @@ router.get('/all', (req, res) => {
                             res.send(rows)
                         })
                 break;
-            case 'best': //TODO: corriger la query
-                    db.query('SELECT ??.*, count(??) AS positive, count(??) AS negative, (SELECT ((positive + 1.9208) / (positive + negative) - 1.96 * SQRT((positive * negative) / (positive + negative) + 0.9604) /(positive + negative)) / (1 + 3.8416 / (positive + negative))) AS ci_lower_bound FROM ??, ?? p JOIN ?? p1 WHERE (SELECT positive + negative > 0) ORDER BY ci_lower_bound DESC HAVING positive = 1 AND negative = 0;',
-                        ['posts', 'p1.upvote', 'p.upvote', 'posts', 'post_vote', 'post_vote'], (err, rows) => {
+            case 'best': //TODO: corriger la query, order by publication_date
+                    db.query('SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' + 
+                    'FROM posts ' +
+                    'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
+                    'INNER JOIN (SELECT post_id, count(*) AS total from post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
+                    'WHERE  (u.positive + (t.total - u.positive) > 0) ' +
+                    'ORDER BY ci_lower_bound DESC, publication_date DESC;',
+                     (err, rows) => {
                             if (err) {
                                 console.log(err)
                                 res.sendStatus(500);
@@ -85,13 +89,13 @@ router.route('/:postID') //post avec ses commentaires
             db.query('SELECT ?? FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ?', 
             ['posts.username', 'posts', 'users', 'posts.username', 'users.username', 'posts.username', req.session.username, 'posts.post_id', req.params.postID], (err, rows) => {
                 if (rows.length > 1){
-                    db.query('DELETE FROM ?? where posts.post_id = ?',
+                    db.query('DELETE FROM ?? WHERE posts.post_id = ?',
                         ['posts', req.params.postID], (err, rows) => {
                             if (err) {
                                 res.sendStatus(500);
                                 res.end;
                             }
-                            res.send(rows)
+                            res.send(200)
                         })
                 }
                 else {
@@ -116,7 +120,7 @@ router.get('/:postID/comments', (req, res) => {
         })
 })
 
-router.get('/:postID/themes', (req, res) => {
+.get('/:postID/themes', (req, res) => {
         db.query(
             'SELECT themes.* FROM ??, ??, ?? WHERE post_theme.post_id = posts.post_id AND themes.theme = post_theme.theme AND posts.post_id = ?', //TODO;mettre a jour
             ['posts', 'post_theme', 'themes', req.params.postID], (err, rows) => {
@@ -141,7 +145,7 @@ router.get('/:postID/themes', (req, res) => {
 //     })
 // })
 
-router.get('/:postID/upvotes', (req, res) => {
+.get('/:postID/upvotes', (req, res) => {
     db.query('SELECT count(post_vote.*) FROM ??, ?? WHERE posts.post_id = post_vote.post_id AND post_vote.post_id = ? AND post_vote.upvote = 1',
         ['posts','post_vote', req.params.postID], (err, rows) => {
         if (err) {
@@ -152,7 +156,7 @@ router.get('/:postID/upvotes', (req, res) => {
     })
 })
 
-router.get('/:postID/downvotes', (req, res) => {
+.get('/:postID/downvotes', (req, res) => {
     db.query('SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 0',
         ['post_vote', 'posts', 'post_vote', 'posts.post_id', 'post_vote.post_id', 'post_vote.post_id', req.params.postID, 'post_vote.upvote'], (err, rows) => {
             if (err) {
@@ -163,7 +167,7 @@ router.get('/:postID/downvotes', (req, res) => {
         })
 })
 
-router.post('/:postID/upvote', (req, res) => {
+.post('/:postID/upvote', (req, res) => {
     if (req.session.isLoggedIn) {
         db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
             ['post_vote', 'upvote', 'username', 'post_id', 1, req.session.username, req.body.postID], (err, rows) => {
@@ -179,7 +183,7 @@ router.post('/:postID/upvote', (req, res) => {
     }
 })
 
-router.post('/:postID/downvote', (req, res) => {
+.post('/:postID/downvote', (req, res) => {
     if (req.session.isLoggedIn){
         db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
             ['post_vote', 'upvote', 'username', 'post_id', 0, req.session.username, req.body.postID], (err, rows) => {
@@ -195,7 +199,7 @@ router.post('/:postID/downvote', (req, res) => {
     }
 })
 
-router.post('/newPost', (req, res) => {
+.post('/createPost', (req, res) => {
     //Si un utilisateur est connecté
     if (req.session.isLoggedIn){
         const contentToClassify = JSON.stringify({ texts: [req.body.postContent] })
@@ -238,19 +242,47 @@ router.post('/newPost', (req, res) => {
     }    
 })
 
-router.post('/newChildPost', (req, res) => { 
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('',
-    [], (err, rows) => {
-        if (err) {
-            res.sendStatus(500);
-            res.end;
-        }
-        console.log('posttID créé: ', rows.insertId)
-        res.send(rows)
-    })
-})
+.post('/createChildPost', (req, res) => { 
+    if (req.session.isLoggedIn) {
+        const contentToClassify = JSON.stringify({ texts: [req.body.postContent] })
+        instance.post('/uclassify/topics/fr/classify', contentToClassify)
+            .then((response) => {
+                //console.log(response.data[0].classification);
+                if (response.data[0].textCoverage >= 0.5) {
+                    const categories = relevantCategories(response.data[0])
+                    //console.log(categories)
+                    db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
+                        ['posts', 'username', 'post_parent_id', 'title', 'content', req.session.username, req.body.postID, req.body.postTitle, req.body.postContent], (err, rows) => {
+                            if (err) {
+                                console.log(err);
+                                res.sendStatus(500);
+                                res.end;
+                            }
+                            console.log(rows)
+                            const postID = rows.insertId
+                            //console.log('postID créé: ', postID)
+                            for (index = 0; index < categories.length; index++) {
+                                db.query('INSERT INTO ??(??,, ??) VALUES (?, ?);',
+                                    ['post_theme', 'post_id', 'theme', postID, categories[index]]);
+                            }
+                            //res.sendStatus(200);
+                            res.send(rows)
+                        })
+                }
+                else {
+                    res.sendStatus(500);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
+            });
+
+    }
+    else {
+        res.sendStatus(401);
+    }    
+});
 
 //On veut prendre seulement les catégories qui sont pertinentes
 function relevantCategories(data){

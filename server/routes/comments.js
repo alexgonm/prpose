@@ -30,7 +30,7 @@ router.get('/comments', (req, res) => {
 // })
 
 
-router.route('/comment/:commentID')
+router.route('/:commentID')
     .get((req, res) => {
         db.query('SELECT * FROM ?? WHERE comment_id = ?',
             ['comments', req.params.commentID], (err, rows) => {
@@ -55,14 +55,28 @@ router.route('/comment/:commentID')
     //         })
     // })
     .delete((req, res) => {
-        db.query('DELETE FROM ?? WHERE comment_id = ?',
-            ['comments', req.params.commentID], (err, rows) => {
-                if (err) {
-                    res.sendStatus(500);
-                    res.end()
-                }
-                res.send(rows)
+        if (req.session.isLoggedIn){
+            db.query('SELECT ?? FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ?',
+                ['comments.username', 'comments', 'users', 'comments.username', 'users.username', 'comments.username', req.session.username, 'comments.comment_id', req.params.commentID], (err, rows) => {
+                    if (rows.length > 1) {
+                        db.query('DELETE FROM ?? WHERE comment_id = ?',
+                            ['comments', req.params.commentID], (err, rows) => {
+                                if (err) {
+                                    res.sendStatus(500);
+                                    res.end()
+                                }
+                                res.send(200)
+                            })
+                    }
+                    else {
+                        res.sendStatus(401)
+                    }
             })
+        }
+        else {
+            res.sendStatus(401)
+        }
+        
     });
 
 
@@ -75,7 +89,7 @@ router.route('/comment/:commentID')
 // })
 
 
-router.get('comment/:commentID/upvotes', (req, res) => {
+router.get('/:commentID/upvotes', (req, res) => {
     db.query('SELECT count(comment_vote.*) FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 1',
         ['comments', 'comment_vote', req.params.commentID], (err, rows) => {
             if (err) {
@@ -86,7 +100,7 @@ router.get('comment/:commentID/upvotes', (req, res) => {
         })
 })
 
-.get('comment/:commentID/downvotes', (req, res) => {
+.get('/:commentID/downvotes', (req, res) => {
     db.query('SELECT count(comment_vote.*) FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 0',
         ['comments', 'comment_vote', req.params.commentID], (err, rows) => {
             if (err) {
@@ -97,7 +111,7 @@ router.get('comment/:commentID/upvotes', (req, res) => {
         })
 })
 
-.post('comment/:commentID/upvote', (req, res) => {
+.post('/:commentID/upvote', (req, res) => {
     if (req.session.isLoggedIn) {
         db.query('INSERT INTO comment_vote(??, ??, ??) VALUES (?, ?, ?)',
             ['upvote', 'username', 'comment_id', 1, req.session.username, req.params.commentID], (err, rows) => {
@@ -113,7 +127,7 @@ router.get('comment/:commentID/upvotes', (req, res) => {
     }
 })
 
-.post('comment/:commentID/downvote', (req, res) => {
+.post('/:commentID/downvote', (req, res) => {
     if (req.session.isLoggedIn) {
         db.query('INSERT INTO comment_vote(??, ??, ??) VALUES (?, ?, ?)',
             ['upvote', 'username', 'comment_id', 0, req.session.username, req.params.commentID], (err, rows) => {
@@ -130,10 +144,10 @@ router.get('comment/:commentID/upvotes', (req, res) => {
 })
 
 
-router.post('/newComment', (req, res) => {
+.post('/createComment', (req, res) => {
     if (req.session.isLoggedIn){
         db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
-            ['comments', 'username', 'post_id', 'content', req.body.loggedUser, req.body.commentPost, req.body.commentContent], (err, rows) => {
+            ['comments', 'username', 'post_id', 'content', req.session.username, req.body.postID, req.body.commentContent], (err, rows) => {
                 if (err) {
                     res.sendStatus(500);
                     res.end()
@@ -147,12 +161,12 @@ router.post('/newComment', (req, res) => {
     }
 })
 
-router.post('/:commentID/newChildComment', (req, res) => {
+.post('/:commentID/createChildComment', (req, res) => {
     if (req.session.isLoggedIn){
 
     }
     db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
-        ['comments', 'username', 'post_id', 'comment_id_parent', 'content', req.session.username, req.body.commentPost, req.body.commentParent ,req.body.commentContent], (err, rows) => {
+        ['comments', 'username', 'post_id', 'comment_id_parent', 'content', req.session.username, req.body.postID, req.body.commentID ,req.body.commentContent], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end()
@@ -160,6 +174,6 @@ router.post('/:commentID/newChildComment', (req, res) => {
             console.log('commentID créé', rows.insertID)
             res.send(rows)
         })
-})
+});
 
 module.exports = router;
