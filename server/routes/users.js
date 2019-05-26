@@ -3,31 +3,21 @@ const db = require('../database/db');
 const router = express.Router();
 
 
-router.get('/users', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query(
-        'SELECT ??, ??, ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
-        ['username', 'age', 'creation_date', 'creation_hour', 'biography', 'users'], function (err, rows) {
+router.get('/all', (req, res) => {
+    db.query('SELECT ??, ??, ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
+        ['username', 'age', 'creation_date', 'creation_hour', 'biography', 'users'], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end()
             }
-
-            var users = rows.map((row) => {
-                return
-            })
-
             res.json(rows)
         })
 });
 
-router.route('/user/:username')
+router.route('/:username')
     .get((req, res) => {
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
         db.query('SELECT ??, ??, ??, ??, ?? FROM ?? WHERE username = ?',
-            ['username', 'age', 'creation_date', 'creation_hour', 'biography', 'users', req.params.username], function (err, rows, fields) {
+            ['username', 'age', 'creation_date', 'creation_hour', 'biography', 'users', req.params.username],  (err, rows) => {
                 if (err) {
                     res.sendStatus(500);
                     res.end()
@@ -35,24 +25,23 @@ router.route('/user/:username')
                 res.json(rows);
             })
     })
-    .delete((req, res) => {
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
-        db.query('DELETE FROM ?? WHERE username = ?',
-            ['users', req.params.username], function (err, rows, fields) {
-                if (err) {
-                    res.sendStatus(500);
-                    res.end()
-                }
-                res.json(rows);
-            })
-    });
+    // .delete((req, res) => { //suppression du compte
+    //     if (req.session.isLoggedIn){
 
-router.get('/user/:username/posts', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('SELECT posts.* FROM ??, ?? WHERE users.username = posts.username AND users.username = ?',
-        ['posts', 'users', req.params.username], function (err, rows, fields) {
+    //     }
+    //     db.query('DELETE FROM ?? WHERE username = ?',
+    //         ['users', req.params.username], (err, rows) => {
+    //             if (err) {
+    //                 res.sendStatus(500);
+    //                 res.end()
+    //             }
+    //             res.json(rows);
+    //         })
+    // });
+
+router.get('/:username/posts', (req, res) => {
+    db.query('SELECT posts.* FROM ??, ?? WHERE users.username = posts.username AND users.username = ? ORDER BY ?? DESC, ?? DESC',
+        ['posts', 'users', req.params.username, 'publication_date', 'publication_hour'], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end()
@@ -62,11 +51,9 @@ router.get('/user/:username/posts', (req, res) => {
 })
 
 //:username/votes , pour montrer les votes votés par l'utilisateur :username
-router.get('/user/:username/votes', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('',
-    [], function(err, rows){
+router.get('/:username/votes', (req, res) => {
+    db.query('SELECT ??.* FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ? ORDER BY ?? DESC, ?? DESC;',
+        ['posts', 'posts', 'post_vote', 'posts.post_id', 'post_vote.post_id', 'post_vote.upvote', 1, 'post_vote.username', req.params.username, 'publication_date', 'publication_hour'], (err, rows) => {
         if (err) {
             res.sendStatus(500);
             res.end()

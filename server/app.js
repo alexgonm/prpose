@@ -45,17 +45,16 @@ app.use(cors({
     credentials: true,
 }));
 
-app.use(require('./routes/index'));
-app.use(require('./routes/users'));
-app.use(require('./routes/themes'));
-app.use(require('./routes/posts'));
-app.use(require('./routes/comments'));
+app.use('/api', require('./routes/index'));
+app.use('/api/user',require('./routes/users'));
+app.use('/api/theme',require('./routes/themes'));
+app.use('/api/post',require('./routes/posts'));
+app.use('/api/comment',require('./routes/comments'));
 
 
 app.use((req, res, next) => {
         res.sendStatus(404)
     })
-
     .listen( PORT, () => {//App sur le port 4000
         console.log('Server port', PORT)
     });

@@ -4,10 +4,8 @@ const router = express.Router();
 
 
 router.get('/themes', function (req, res) {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
     db.query('SELECT * from ??',
-        ["themes"], function (err, rows, fields) {
+        ["themes"], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end()
@@ -16,12 +14,9 @@ router.get('/themes', function (req, res) {
         })
 })
 
-.route('/theme/:theme')
-    .get(function (req, res) {
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
-        db.query('SELECT posts.*, themes.* FROM ??, ??, ?? WHERE post_theme.post_id = posts.post_id AND themes.theme = post_theme.theme AND post_theme.theme = ?', //'SELECT posts.* FROM ??, ??, ?? WHERE themes.theme = posts.theme AND themes.nom = ? AND posts.post_id = post_vote.post_id ORDER BY ()', ['posts', 'themes', 'post_vote', req.params.theme]
-            ['posts', 'post_theme','themes', req.params.theme], function (err, rows, fields) {
+    .get('/theme/:theme', (req, res) => {
+        db.query('SELECT * FROM ?? WHERE theme = ?', //'SELECT posts.* FROM ??, ??, ?? WHERE themes.theme = posts.theme AND themes.nom = ? AND posts.post_id = post_vote.post_id ORDER BY ()', ['posts', 'themes', 'post_vote', req.params.theme]
+            ['themes', req.params.theme], (err, rows) => {
                 if (err) {
                     res.sendStatus(500);
                     res.end()
@@ -29,5 +24,18 @@ router.get('/themes', function (req, res) {
                 res.json(rows);
             })
     })
+
+    .get('/theme/:theme/posts', (req, res) => {
+        db.query('SELECT posts.* FROM ??, ??, ?? WHERE post_theme.post_id = posts.post_id AND themes.theme = post_theme.theme AND post_theme.theme = ?', //'SELECT posts.* FROM ??, ??, ?? WHERE themes.theme = posts.theme AND themes.nom = ? AND posts.post_id = post_vote.post_id ORDER BY ()', ['posts', 'themes', 'post_vote', req.params.theme]
+            ['posts', 'post_theme', 'themes', req.params.theme], (err, rows) => {
+                if (err) {
+                    res.sendStatus(500);
+                    res.end()
+                }
+                res.json(rows);
+            })
+    })
+
+    
 
 module.exports = router;

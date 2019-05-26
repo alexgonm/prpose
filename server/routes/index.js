@@ -58,7 +58,7 @@ router.route('/login')
             });
         } else {
             //res.send('Please enter Username and Password!');
-            res.sendStatus();
+            res.sendStatus(400);
         }
     })
 
@@ -78,7 +78,7 @@ router.route('/signup')
         if (!req.session.isLoggedIn){
             const user = req.body.username; const email = req.body.email; const psw = req.body.password; const age = req.body.age; const bio = req.body.biography;
             db.query('SELECT users.username FROM users WHERE users.username = ? OR users.email = ?',
-                [user, email], function (err, rows) {
+                [user, email], (err, rows) => {
                     if (err) {
                         res.sendStatus(500);
                         res.end()
@@ -87,19 +87,19 @@ router.route('/signup')
                         res.sendStatus(409)//('Username/email already used.');
                     }
                     else {
-                        const hash = bcrypt.hash(psw, BCRYPT_SALT_ROUNDS)
-                        db.query('INSERT INTO users(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
-                            ['username', 'email', 'password', 'age', 'biography', user, email, hash, age, bio], function (err, rows) {
-                                if (err) {
-                                    console.log(err)
-                                    res.sendStatus(500);
-                                    res.end()
-                                }
-                                res.sendStatus(200)//('Nice, you\'ve signed up. Welcome to PrPose.')
-                                //res.redirect('/');
+                        bcrypt.hash(psw, BCRYPT_SALT_ROUNDS).then(function (hash){
+                            db.query('INSERT INTO ??(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
+                                ['users', 'username', 'email', 'password', 'age', 'biography', user, email, hash, age, bio], function (err, rows) {
+                                    if (err) {
+                                        console.log(err)
+                                        res.sendStatus(500);
+                                    }
+                                    res.sendStatus(200);//('Nice, you\'ve signed up. Welcome to PrPose.')
+                                    //res.redirect('/');
+                                })
 
-                            })
-
+                        })
+                        
                     }
                 })
         }

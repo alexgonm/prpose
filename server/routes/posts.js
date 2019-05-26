@@ -12,30 +12,53 @@ const instance = axios.create({
     }
 })
 
-//TODO: regler le probleme de session (il faut que ca soit bien l'utlisateur connecté qui puisse faire ca)
-
-router.get('/posts', (req, res) => {
-    //res.setHeader();
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query(
-        'SELECT * FROM ??',
-        ['posts'], function (err, rows) {
-            if (err) {
-                res.sendStatus(500);
-                res.end()
-            }
-            res.send(rows)
-        })
+router.get('/all', (req, res) => {
+    if (req.query.sort){
+        console.log('onjo')
+        switch (req.query.sort) {
+            case 'new':
+                    db.query('SELECT * FROM ?? ORDER BY ?? DESC',
+                        ['posts', 'publication_date'], (err, rows) => {
+                            if (err) {
+                                res.sendStatus(500);
+                                res.end()
+                            }
+                            res.send(rows)
+                        })
+                break;
+            case 'best': //TODO: corriger la query
+                    db.query('SELECT ??.*, count(??) AS positive, count(??) AS negative, (SELECT ((positive + 1.9208) / (positive + negative) - 1.96 * SQRT((positive * negative) / (positive + negative) + 0.9604) /(positive + negative)) / (1 + 3.8416 / (positive + negative))) AS ci_lower_bound FROM ??, ?? p JOIN ?? p1 WHERE (SELECT positive + negative > 0) ORDER BY ci_lower_bound DESC HAVING positive = 1 AND negative = 0;',
+                        ['posts', 'p1.upvote', 'p.upvote', 'posts', 'post_vote', 'post_vote'], (err, rows) => {
+                            if (err) {
+                                console.log(err)
+                                res.sendStatus(500);
+                                res.end()
+                            }
+                            res.send(rows)
+                        })
+                break;
+            default:
+                res.sendStatus(500)
+        }
+    }
+    else {
+        console.log('k')
+        db.query('SELECT * FROM ??',
+            ['posts'], (err, rows) => {
+                if (err) {
+                    res.sendStatus(500);
+                    res.end()
+                }
+                res.send(rows)
+            })
+    }
+     
 })
 
-router.route('/post/:postID') //post avec ses commentaires
+router.route('/:postID') //post avec ses commentaires
     .get((req, res) => {
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
-        db.query(
-            'SELECT * FROM ?? WHERE posts.post_id = ?', //TODO: mettre
-            ['posts', req.params.postID], function (err, rows) {
+        db.query('SELECT * FROM ?? WHERE posts.post_id = ?', //TODO: mettre
+            ['posts', req.params.postID], (err, rows) => {
                 if (err) {
                     res.sendStatus(500);
                     res.end()
@@ -58,24 +81,33 @@ router.route('/post/:postID') //post avec ses commentaires
         // )
     })
     .delete((req, res) =>{
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
-        db.query('DELETE FROM ?? where posts.post_id = ?',
-        ['posts', req.params.postID], function(err, rows){
-            if (err){
-                res.sendStatus(500);
-                res.end;
-            }
-            res.send(rows)
-        })
+        if (req.session.isLoggedIn){
+            db.query('SELECT ?? FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ?', 
+            ['posts.username', 'posts', 'users', 'posts.username', 'users.username', 'posts.username', req.session.username, 'posts.post_id', req.params.postID], (err, rows) => {
+                if (rows.length > 1){
+                    db.query('DELETE FROM ?? where posts.post_id = ?',
+                        ['posts', req.params.postID], (err, rows) => {
+                            if (err) {
+                                res.sendStatus(500);
+                                res.end;
+                            }
+                            res.send(rows)
+                        })
+                }
+                else {
+                    res.sendStatus(401)
+                }
+            })
+        }
+        else {
+            res.sendStatus(401)
+        } 
     });
 
 //Seulement les commentaires 'racine', ceux qui n'ont pas de parents
-router.get('/post/:postID/comments', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
+router.get('/:postID/comments', (req, res) => {
     db.query('SELECT comments.* FROM ??, ?? WHERE posts.post_id = comments.post_id AND comments.comment_id_parent = NULL AND comments.post_id = ?',
-        ['comments', 'posts', req.params.postID], function (err, rows) {
+        ['comments', 'posts', req.params.postID], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end()
@@ -84,12 +116,10 @@ router.get('/post/:postID/comments', (req, res) => {
         })
 })
 
-router.get('/post/:postID/themes', (req, res) => {
-        const method = req.method; const routePath = req.route.path; const query = req.query;
-        console.log({ method, routePath, query });
+router.get('/:postID/themes', (req, res) => {
         db.query(
             'SELECT themes.* FROM ??, ??, ?? WHERE post_theme.post_id = posts.post_id AND themes.theme = post_theme.theme AND posts.post_id = ?', //TODO;mettre a jour
-            ['posts', 'post_theme', 'themes', req.params.postID], function (err, rows) {
+            ['posts', 'post_theme', 'themes', req.params.postID], (err, rows) => {
                 if (err) {
                     res.sendStatus(500);
                     res.end()
@@ -98,7 +128,7 @@ router.get('/post/:postID/themes', (req, res) => {
             })
 })
 
-// router.get('/post/:postID/vote',(req, res) => {
+// router.get('/:postID/vote',(req, res) => {
 //     const method = req.method; const routePath = req.route.path; const query = req.query;
 //     console.log({ method, routePath, query });
 //     db.query('SELECT post_vote.* FROM ??, ??, ?? WHERE post_vote.username = users.username AND post_vote.post_id = posts.post_id AND post_vote.post_id = ? AND post_vote.username = ?',
@@ -111,11 +141,9 @@ router.get('/post/:postID/themes', (req, res) => {
 //     })
 // })
 
-router.get('post/:postID/upvotes', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
+router.get('/:postID/upvotes', (req, res) => {
     db.query('SELECT count(post_vote.*) FROM ??, ?? WHERE posts.post_id = post_vote.post_id AND post_vote.post_id = ? AND post_vote.upvote = 1',
-        ['posts','post_vote', req.params.postID], function(err, rows){
+        ['posts','post_vote', req.params.postID], (err, rows) => {
         if (err) {
             res.sendStatus(500);
             res.end;
@@ -124,11 +152,9 @@ router.get('post/:postID/upvotes', (req, res) => {
     })
 })
 
-router.get('post/:postID/downvotes', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('SELECT count(post_vote.*) FROM ??, ?? WHERE posts.post_id = post_vote.post_id AND post_vote.post_id = ? AND post_vote.upvote = 0',
-        ['posts', 'post_vote', req.params.postID], function (err, rows) {
+router.get('/:postID/downvotes', (req, res) => {
+    db.query('SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 0',
+        ['post_vote', 'posts', 'post_vote', 'posts.post_id', 'post_vote.post_id', 'post_vote.post_id', req.params.postID, 'post_vote.upvote'], (err, rows) => {
             if (err) {
                 res.sendStatus(500);
                 res.end;
@@ -137,80 +163,91 @@ router.get('post/:postID/downvotes', (req, res) => {
         })
 })
 
-router.post('post/:postID/upvote', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('INSERT INTO post_vote(??, ??, ??) VALUES (?, ?, ?)',
-        ['upvote', 'username', 'post_id', 1, req.body.loggedUser, req.body.postID], function (err, rows) {
-            if (err) {
-                res.sendStatus(500);
-                res.end;
-            }
-            res.send(rows)
-        })
+router.post('/:postID/upvote', (req, res) => {
+    if (req.session.isLoggedIn) {
+        db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
+            ['post_vote', 'upvote', 'username', 'post_id', 1, req.session.username, req.body.postID], (err, rows) => {
+                if (err) {
+                    res.sendStatus(500);
+                    res.end;
+                }
+                res.send(rows)
+            })
+    }
+    else {
+        res.sendStatus(401)
+    }
 })
 
-router.post('post/:postID/downvote', (req, res) => {
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    db.query('INSERT INTO post_vote(??, ??, ??) VALUES (?, ?, ?)',
-        ['upvote', 'username', 'post_id', 0, req.body.loggedUser, req.body.postID], function (err, rows) {
-            if (err) {
-                res.sendStatus(500);
-                res.end;
-            }
-            res.send(rows)
-        })
+router.post('/:postID/downvote', (req, res) => {
+    if (req.session.isLoggedIn){
+        db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
+            ['post_vote', 'upvote', 'username', 'post_id', 0, req.session.username, req.body.postID], (err, rows) => {
+                if (err) {
+                    res.sendStatus(500);
+                    res.end;
+                }
+                res.send(rows)
+            })
+    }
+    else {
+        res.sendStatus(401)
+    }
 })
 
-router.post('/createPost', (req, res, next) => {//TODO: regler le probleme de session (il faut que ca soit bien l'utlisateur connecté qui puisse faire ca)
-    const method = req.method; const routePath = req.route.path; const query = req.query;
-    console.log({ method, routePath, query });
-    //console.log('body: ', req.body)
-    // if (req.session.isLoggedIn){
-    //     db.query('INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
-    //         ['posts', 'username', 'theme', 'title', 'content', req.session.username, req.body.postTheme, req.body.postTitle, req.body.postContent], function (err, rows, fields) {
-    //             if (err) {
-    //                 console.log(err)
-    //                 res.sendStatus(500);
-    //                 res.end;
-    //             }
-    //             console.log('postID créé: ', rows.insertID)
-    //             res.send(rows)
-
-    //         })
-    // }
-    // else{
-    //     next()
-    // }
-    const contentToClassify = JSON.stringify({ texts: [req.body.postContent] })
-    instance.post('/uclassify/topics/fr/classify', contentToClassify)
-    .then((response) => {
-        //console.log(response.data[0].classification);
-        if (response.data[0].textCoverage >= 0.5){
-            const categories = relevantCategories(response.data[0])
-            console.log(categories)
-        }
-        else{
-            res.sendStatus(500)
-        }
+router.post('/newPost', (req, res) => {
+    //Si un utilisateur est connecté
+    if (req.session.isLoggedIn){
+        const contentToClassify = JSON.stringify({ texts: [req.body.postContent] })
+        instance.post('/uclassify/topics/fr/classify', contentToClassify)
+            .then((response) => {
+                //console.log(response.data[0].classification);
+                if (response.data[0].textCoverage >= 0.5) {
+                    const categories = relevantCategories(response.data[0])
+                    //console.log(categories)
+                    db.query('INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
+                        ['posts', 'username',  'title', 'content', req.session.username, req.body.postTitle, req.body.postContent], (err, rows) => {
+                            if (err) {
+                                console.log(err);
+                                res.sendStatus(500);
+                                res.end;
+                            }
+                            console.log(rows)
+                            const postID = rows.insertId
+                            //console.log('postID créé: ', postID)
+                            for (index = 0; index < categories.length; index++){
+                                db.query('INSERT INTO ??(??, ??) VALUES (?, ?);',
+                                    ['post_theme', 'post_id', 'theme', postID, categories[index]]);
+                            }
+                            //res.sendStatus(200);
+                            res.send(rows)
+                        })
+                }
+                else {
+                    res.sendStatus(500);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+                res.sendStatus(500);
+            });
         
-    })
-    .catch((error) => {
-        console.log(error);
-    });
+    }
+    else{
+        res.sendStatus(401);
+    }    
 })
 
-router.post('/createChildPost', (req, res) => { //TODO: regler le probleme de session (il faut que ca soit bien l'utlisateur connecté qui puisse faire ca)
+router.post('/newChildPost', (req, res) => { 
     const method = req.method; const routePath = req.route.path; const query = req.query;
     console.log({ method, routePath, query });
     db.query('',
-    [], function(err, rows){
+    [], (err, rows) => {
         if (err) {
             res.sendStatus(500);
             res.end;
         }
-        console.log('posttID créé: ', rows.insertID)
+        console.log('posttID créé: ', rows.insertId)
         res.send(rows)
     })
 })
@@ -225,17 +262,16 @@ function relevantCategories(data){
     });
     //On prend les probabilité, on les tri dans l'ordre décroissant
     const probabilities = Array.from(probaOfCategory.keys()).sort().reverse()
-    
     //On supprime les probabilités qui ne sont pas assez grandes
     for(index = 1; index < probabilities.length; index++) {
-        if (probabilities[0] - probabilities[index] > 0.08) {
+        if (probabilities[0] - probabilities[index] > 0.1) { //0.1 est un chiffre arbitraire
             probabilities.splice(index, probabilities.length - index);
         }
     }
-    return getCategories(probabilities, probaOfCategory)
+    return getCategories(probabilities, probaOfCategory) //On retourne les catégories auxquels correspondent les probabilités de l'Array probabilities
 }
 
-function getCategories(probabilities, probabilitiesMap){
+function getCategories(probabilities, probabilitiesMap){ 
     const categories = []
     for(index = 0; index < probabilities.length; index++) {
         categories.push(probabilitiesMap.get(probabilities[index]))
