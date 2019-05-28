@@ -40,7 +40,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
 			}
@@ -73,7 +72,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
 			}
@@ -100,7 +98,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
 			}

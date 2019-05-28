@@ -12,56 +12,52 @@ const instance = axios.create({
 	}
 });
 
-router.get('/all', (req, res) => {
-	if (req.query.sort) {
-		switch (req.query.sort) {
-			case 'new':
-				db.query(
-					'SELECT * FROM ?? ORDER BY ?? DESC, ?? DESC',
-					['posts', 'publication_hour', 'publication_date'],
-					(err, rows) => {
-						if (err) {
-							res.sendStatus(500);
-							res.end();
-						}
-						res.send(rows);
-					}
-				);
-				break;
-			case 'best': //TODO: corriger la query, order by publication_date
-				db.query(
-					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
-						'FROM posts ' +
-						'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
-						'INNER JOIN (SELECT post_id, count(*) AS total from post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
-						'WHERE  (u.positive + (t.total - u.positive) > 0) ' +
-						'ORDER BY ci_lower_bound DESC, publication_date DESC;',
-					(err, rows) => {
-						if (err) {
-							console.log(err);
-							res.sendStatus(500);
-							res.end();
-						}
-						res.send(rows);
-					}
-				);
-				break;
-			default:
-				res.sendStatus(500);
-		}
-	} else {
-		console.log('k');
-		db.query('SELECT * FROM ??', ['posts'], (err, rows) => {
-			if (err) {
-				res.sendStatus(500);
-				res.end();
-			}
-			res.send(rows);
-		});
-	}
-});
-
 router
+	.get('/all', (req, res) => {
+		if (req.query.sort) {
+			switch (req.query.sort) {
+				case 'new':
+					db.query(
+						'SELECT * FROM ?? ORDER BY ?? DESC, ?? DESC',
+						['posts', 'publication_hour', 'publication_date'],
+						(err, rows) => {
+							if (err) {
+								res.sendStatus(500);
+							}
+							res.send(rows);
+						}
+					);
+					break;
+				case 'best': //TODO: corriger la query, order by publication_date
+					db.query(
+						'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
+							'FROM posts ' +
+							'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
+							'INNER JOIN (SELECT post_id, count(*) AS total from post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
+							'WHERE  (u.positive + (t.total - u.positive) > 0) ' +
+							'ORDER BY ci_lower_bound DESC, publication_date DESC;',
+						(err, rows) => {
+							if (err) {
+								console.log(err);
+								res.sendStatus(500);
+							}
+							res.send(rows);
+						}
+					);
+					break;
+				default:
+					res.sendStatus(500);
+			}
+		} else {
+			db.query('SELECT * FROM ??', ['posts'], (err, rows) => {
+				if (err) {
+					res.sendStatus(500);
+				}
+				res.send(rows);
+			});
+		}
+	})
+
 	.route('/:postID') //post avec ses commentaires
 	.get((req, res) => {
 		db.query(
@@ -70,7 +66,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
 			}
@@ -94,6 +89,7 @@ router
 	.delete((req, res) => {
 		if (req.session.isLoggedIn) {
 			db.query(
+				//On vérifie  que l'utilisateur connecté est bien l'utilisateur qui a posté la publication
 				'SELECT ?? FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ?',
 				[
 					'posts.username',
@@ -107,6 +103,7 @@ router
 					req.params.postID
 				],
 				(err, rows) => {
+					//Si c'est bien lui
 					if (rows.length > 1) {
 						db.query(
 							'DELETE FROM ?? WHERE posts.post_id = ?',
@@ -114,35 +111,76 @@ router
 							(err, rows) => {
 								if (err) {
 									res.sendStatus(500);
-									res.end;
 								}
 								res.send(200);
 							}
 						);
-					} else {
-						res.sendStatus(401);
-					}
+						//Sinon il n'a pas le droit
+					} else res.sendStatus(401);
 				}
 			);
-		} else {
-			res.sendStatus(401);
-		}
+			//Il faut être connecté pour supprimer
+		} else res.sendStatus(401);
 	});
 
 //Seulement les commentaires 'racine', ceux qui n'ont pas de parents
 router
 	.get('/:postID/comments', (req, res) => {
-		db.query(
-			'SELECT comments.* FROM ??, ?? WHERE posts.post_id = comments.post_id AND comments.comment_id_parent = NULL AND comments.post_id = ?',
-			['comments', 'posts', req.params.postID],
-			(err, rows) => {
-				if (err) {
+		if (req.query.sort) {
+			switch (req.query.sort) {
+				case 'new':
+					db.query(
+						'SELECT * FROM ??, ?? WHERE ?? = ?? AND ?? = ? ORDER BY ?? DESC, ?? DESC',
+						[
+							'comments',
+							'posts',
+							'posts.post_id',
+							'comments.post_id',
+							'comments.post_id',
+							req.params.postID,
+							'publication_hour',
+							'publication_date'
+						],
+						(err, rows) => {
+							if (err) {
+								res.sendStatus(500);
+							}
+							res.send(rows);
+						}
+					);
+					break;
+				case 'best': //TODO: corriger la query, order by publication_date
+					db.query(
+						'SELECT comments.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
+							'FROM comments, posts ' +
+							'INNER JOIN (SELECT comment_id, count(*) AS positive FROM comment_vote WHERE comment_vote.upvote = 1 GROUP BY comment_id) u ON u.comment_id = comments.comment_id ' +
+							'INNER JOIN (SELECT comment_id, count(*) AS total from comment_vote GROUP BY comment_id) t ON t.comment_id = comments.comment_id ' +
+							'WHERE  comments.post_id = posts.post_id AND comments.post_id = ? AND (u.positive + (t.total - u.positive) > 0) ' +
+							'ORDER BY ci_lower_bound DESC;',
+						[req.params.postID],
+						(err, rows) => {
+							if (err) {
+								console.log(err);
+								res.sendStatus(500);
+							}
+							res.send(rows);
+						}
+					);
+					break;
+				default:
 					res.sendStatus(500);
-					res.end();
-				}
-				res.json(rows);
 			}
-		);
+		} else
+			db.query(
+				'SELECT comments.* FROM ??, ?? WHERE posts.post_id = comments.post_id AND comments.comment_id_parent = NULL AND comments.post_id = ?',
+				['comments', 'posts', req.params.postID],
+				(err, rows) => {
+					if (err) {
+						res.sendStatus(500);
+					}
+					res.json(rows);
+				}
+			);
 	})
 
 	.get('/:postID/themes', (req, res) => {
@@ -152,9 +190,29 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
+			}
+		);
+	})
+
+	//Obtenir les posts enfants d'un post
+	.get('/:postID/posts', (req, res) => {
+		db.query(
+			'SELECT ??.* FROM ?? JOIN (SELECT * FROM posts) ?? WHERE ?? = ?? AND ?? = ?',
+			[
+				'children',
+				'posts',
+				'children',
+				'posts.post_id',
+				'children.post_id',
+				'children.post_parent_id',
+				req.params.postID
+			],
+			(err, rows) => {
+				console.log(err);
+				if (err) res.sendStatus(500);
+				res.send(rows);
 			}
 		);
 	})
@@ -179,7 +237,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end;
 				}
 				res.send(rows);
 			}
@@ -202,7 +259,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end;
 				}
 				res.send(rows);
 			}
@@ -225,7 +281,6 @@ router
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
-						res.end;
 					}
 					res.send(rows);
 				}
@@ -251,7 +306,6 @@ router
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
-						res.end;
 					}
 					res.send(rows);
 				}
@@ -289,7 +343,6 @@ router
 								if (err) {
 									console.log(err);
 									res.sendStatus(500);
-									res.end;
 								}
 								console.log(rows);
 								const postID = rows.insertId;
@@ -349,19 +402,24 @@ router
 								if (err) {
 									console.log(err);
 									res.sendStatus(500);
-									res.end;
 								}
 								console.log(rows);
 								const postID = rows.insertId;
 								//console.log('postID créé: ', postID)
 								for (index = 0; index < categories.length; index++) {
-									db.query('INSERT INTO ??(??,, ??) VALUES (?, ?);', [
-										'post_theme',
-										'post_id',
-										'theme',
-										postID,
-										categories[index]
-									]);
+									db.query(
+										'INSERT INTO ??(??, ??) VALUES (?, ?);',
+										[
+											'post_theme',
+											'post_id',
+											'theme',
+											postID,
+											categories[index]
+										],
+										(err, rows) => {
+											console.log(rows.insertId);
+										}
+									);
 								} //res.sendStatus(200);
 								res.send(rows);
 							}

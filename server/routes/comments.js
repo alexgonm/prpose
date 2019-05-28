@@ -8,7 +8,6 @@ router.get('/comments', (req, res) => {
 	db.query('SELECT * FROM ??', ['comments'], (err, rows) => {
 		if (err) {
 			res.sendStatus(500);
-			res.end();
 		}
 		res.json(rows);
 	});
@@ -37,7 +36,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				res.json(rows);
 			}
@@ -59,6 +57,7 @@ router
 	.delete((req, res) => {
 		if (req.session.isLoggedIn) {
 			db.query(
+				//On vérifie  que l'utilisateur connecté est bien l'utilisateur qui a posté le commentaire
 				'SELECT ?? FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ?',
 				[
 					'comments.username',
@@ -72,6 +71,7 @@ router
 					req.params.commentID
 				],
 				(err, rows) => {
+					//Si c'est le bon utilisateur
 					if (rows.length > 1) {
 						db.query(
 							'DELETE FROM ?? WHERE comment_id = ?',
@@ -79,19 +79,16 @@ router
 							(err, rows) => {
 								if (err) {
 									res.sendStatus(500);
-									res.end();
 								}
 								res.send(200);
 							}
 						);
-					} else {
-						res.sendStatus(401);
-					}
+						//Autrement, il n'a pas le droit
+					} else res.sendStatus(401);
 				}
 			);
-		} else {
-			res.sendStatus(401);
-		}
+			//Pas le droit si l'utilisateur n'est pas connecté
+		} else res.sendStatus(401);
 	});
 
 //getCommentChildren
@@ -103,6 +100,25 @@ router
 // })
 
 router
+	.get('/:commentID/comments', (req, res) => {
+		db.query(
+			'SELECT ??.* FROM ?? JOIN (SELECT * FROM posts) ?? WHERE ?? = ?? AND ?? = ?',
+			[
+				'children',
+				'comments',
+				'children',
+				'parent.post_id',
+				'children.post_parent_id',
+				'children.post_id',
+				req.params.commentID
+			],
+			(err, rows) => {
+				if (err) res.sendStatus(500);
+				res.send(rows);
+			}
+		);
+	})
+
 	.get('/:commentID/upvotes', (req, res) => {
 		db.query(
 			'SELECT count(comment_vote.*) FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 1',
@@ -110,7 +126,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end;
 				}
 				res.send(rows);
 			}
@@ -124,7 +139,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end;
 				}
 				res.send(rows);
 			}
@@ -146,7 +160,6 @@ router
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
-						res.end;
 					}
 					res.send(rows);
 				}
@@ -171,7 +184,6 @@ router
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
-						res.end;
 					}
 					res.send(rows);
 				}
@@ -197,7 +209,6 @@ router
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
-						res.end();
 					}
 					console.log('commentID créé', rows.insertID);
 					res.send(rows);
@@ -227,7 +238,6 @@ router
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
-					res.end();
 				}
 				console.log('commentID créé', rows.insertID);
 				res.send(rows);

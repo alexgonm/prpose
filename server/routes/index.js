@@ -75,12 +75,11 @@ router
 					'SELECT users.username FROM users WHERE users.username = ? OR users.email = ?',
 					[user, email],
 					(err, rows) => {
-						if (err) {
-							res.sendStatus(500);
-							res.end();
-						} else if (rows.length > 0) {
-							res.sendStatus(409); //('Username/email already used.');
-						} else {
+						if (err) res.sendStatus(500);
+						//('Username/email already used.');
+						else if (rows.length > 0) res.sendStatus(409);
+						//Si l'utilisateur n'existe pas
+						else {
 							bcrypt.hash(psw, BCRYPT_SALT_ROUNDS).then(function(hash) {
 								db.query(
 									'INSERT INTO ??(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
