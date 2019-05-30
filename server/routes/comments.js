@@ -2,8 +2,6 @@ const express = require('express');
 const db = require('../database/db');
 const router = express.Router();
 
-//TODO: add sorting to comments
-
 router.get('/comments', (req, res) => {
 	db.query('SELECT * FROM ??', ['comments'], (err, rows) => {
 		if (err) {

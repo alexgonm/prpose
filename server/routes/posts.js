@@ -3,12 +3,14 @@ const axios = require('axios');
 const db = require('../database/db');
 const router = express.Router();
 
+const UCLAS_TOKEN = process.env.UCLAS_TOKEN;
+
 const instance = axios.create({
 	baseURL: 'https://api.uclassify.com/v1',
 	headers: {
 		'Content-Type': 'application/json',
 		Accept: 'application/json',
-		Authorization: 'Token zdOP4kz6GcGQ'
+		Authorization: `Token ${UCLAS_TOKEN}`
 	}
 });
 
@@ -28,7 +30,7 @@ router
 						}
 					);
 					break;
-				case 'best': //TODO: corriger la query, order by publication_date
+				case 'best':
 					db.query(
 						'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
 							'FROM posts ' +
@@ -58,10 +60,10 @@ router
 		}
 	})
 
-	.route('/:postID') //post avec ses commentaires
+	.route('/:postID') //Obtenir de la publication 'postID'
 	.get((req, res) => {
 		db.query(
-			'SELECT * FROM ?? WHERE posts.post_id = ?', //TODO: mettre
+			'SELECT * FROM ?? WHERE posts.post_id = ?',
 			['posts', req.params.postID],
 			(err, rows) => {
 				if (err) {
@@ -149,7 +151,7 @@ router
 						}
 					);
 					break;
-				case 'best': //TODO: corriger la query, order by publication_date
+				case 'best':
 					db.query(
 						'SELECT comments.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
 							'FROM comments, posts ' +
@@ -185,13 +187,24 @@ router
 
 	.get('/:postID/themes', (req, res) => {
 		db.query(
-			'SELECT themes.* FROM ??, ??, ?? WHERE post_theme.post_id = posts.post_id AND themes.theme = post_theme.theme AND posts.post_id = ?', //TODO;mettre a jour
-			['posts', 'post_theme', 'themes', req.params.postID],
+			'SELECT ??.* FROM ??, ??, ?? WHERE ?? = ?? AND ?? = ?? AND ?? = ?',
+			[
+				'themes',
+				'posts',
+				'post_theme',
+				'themes',
+				'post_theme.post_id',
+				'posts.post_id',
+				'post_theme.theme',
+				'themes.theme',
+				'posts.post_id',
+				req.params.postID
+			],
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.json(rows);
+				res.send(rows);
 			}
 		);
 	})
@@ -373,6 +386,7 @@ router
 		}
 	})
 
+	//TODO: transformer les requêtes en transaction pour être sûr du résultats
 	.post('/createChildPost', (req, res) => {
 		if (req.session.isLoggedIn) {
 			const contentToClassify = JSON.stringify({

@@ -4,6 +4,7 @@ const session = require('express-session');
 const redisStore = require('connect-redis')(session);
 const redis = require('redis');
 const cors = require('cors');
+const dotenv = require('dotenv');
 const app = express();
 const redisClient = redis.createClient();
 
@@ -11,11 +12,17 @@ redisClient.on('error', err => {
 	console.log('Redis error: ', err);
 });
 
+dotenv.config({
+	path: './.env'
+});
+
 const PORT = process.env.PORT || 3000;
 const SESS_ID = 'prpose_sid';
-const SESS_SECRET = 's1nGegaRdi3n';
+const SESS_SECRET = process.env.SESS_SECRET || 's1nGegaRdi3n';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const SESS_SECURE = NODE_ENV === 'production';
+const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 app
 	.use(bodyParser.urlencoded({ extended: true }))
@@ -40,12 +47,12 @@ app
 		})
 	)
 
-	.use(
-		cors({
-			//TODO:
-			credentials: true
-		})
-	)
+	// .use(
+	// 	cors({
+	// 		//TODO:
+	// 		credentials: true
+	// 	})
+	// )
 
 	.use('/api', require('./routes/index'))
 	.use('/api/user', require('./routes/users'))
@@ -58,5 +65,5 @@ app
 	})
 	.listen(PORT, () => {
 		//App sur le port 4000
-		console.log('Server port', PORT);
+		console.log(`Server running on port ${PORT}`);
 	});
