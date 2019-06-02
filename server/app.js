@@ -17,7 +17,7 @@ dotenv.config({
 });
 
 const PORT = process.env.PORT || 3000;
-const SESS_ID = 'prpose_sid';
+const SESS_ID = 'sessionId';
 const SESS_SECRET = process.env.SESS_SECRET || 's1nGegaRdi3n';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const SESS_SECURE = NODE_ENV === 'production';
