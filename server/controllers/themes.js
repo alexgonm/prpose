@@ -24,9 +24,9 @@ const Theme = {
 	getPosts: (req, res) => {
 		switch (req.query.sort) {
 			case 'new':
-				'SELECT ??.* FROM ??, ??, ?? ORDER BY ?? DESC, ?? DESC',
+				'SELECT ?? FROM ??, ??, ?? ORDER BY ?? DESC, ?? DESC',
 					[
-						'posts',
+						'posts.post_id',
 						'posts',
 						'post_theme',
 						'themes',
@@ -56,7 +56,12 @@ const Theme = {
 							console.log(err);
 							res.sendStatus(500);
 						}
-						res.send(rows);
+
+						const posts = rows.map(row => {
+							return { postId: row.post_id };
+						});
+
+						res.send(posts);
 					}
 				);
 				break;
@@ -84,7 +89,12 @@ const Theme = {
 					(err, rows) => {
 						console.log(err);
 						if (err) res.sendStatus(500);
-						res.send(rows);
+
+						const posts = rows.map(row => {
+							return { postId: row.post_id };
+						});
+
+						res.send(posts);
 					}
 				);
 				break;

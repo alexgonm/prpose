@@ -1,14 +1,13 @@
 const express = require('express');
-const db = require('../models/db');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const router = express.Router();
-const Auth = require('../controllers/authController');
+const Auth = require('../controllers/authentication');
 
 const BCRYPT_SALT_ROUNDS = 10;
 
 router
-	.get('/', function(req, res) {
+	.get('/', (req, res) => {
 		//res.setHeader('Content-Type', 'text/html');
 		res.sendStatus(200);
 	})
@@ -22,41 +21,7 @@ router
 			res.redirect('/');
 		}
 	})
-	.post((req, res) => {
-		var username = req.body.username;
-		var password = req.body.password;
-		if (username && password) {
-			db.query(
-				'SELECT * FROM ?? WHERE username = ?',
-				['users', username],
-				function(err, rows, fields) {
-					if (rows.length > 0) {
-						var hash = rows.map(row => {
-							return row.password;
-						});
-						//console.log(hash[0])
-						bcrypt.compare(password, hash[0]).then(result => {
-							if (result) {
-								req.session.username = username;
-								req.session.isLoggedIn = true;
-								//console.log([req.session.username, req.session.isLoggedIn])
-								req.session.save(err => {
-									// session saved
-									res.sendStatus(200);
-								});
-							} else {
-								res.sendStatus(401);
-								//setTimeout(() => { res.redirect('/login'); }, 3000);
-							}
-						});
-					}
-				}
-			);
-		} else {
-			//res.send('Please enter Username and Password!');
-			res.sendStatus(400);
-		}
-	}),
+	.post(Auth.login),
 	router
 		.route('/signup')
 		.get((req, res) => {

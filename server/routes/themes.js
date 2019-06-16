@@ -5,7 +5,7 @@ const router = express.Router();
 router
 	.get('/all', Theme.getAll)
 
-	.get('/theme/:theme', Theme.findOne)
+	.get('/:theme', Theme.findOne)
 
 	.get('/:theme/posts', Theme.getPosts);
 

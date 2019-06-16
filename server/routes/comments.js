@@ -16,7 +16,7 @@ router
 
 router
 	//Obtenir les commentaires enfants d'un commentaire
-	.get('/:commentID/comments', Comment.getChildren)
+	.get('/:commentID/comments', Comment.getComments)
 
 	//Obtenir le nombre d'upvotes d'un commentaires
 	.get('/:commentID/upvotes', Comment.getUpvotes)
