@@ -1,8 +1,8 @@
-const db = require('../models/db');
+const db = require('../models/database');
 const uClassify = require('../models/uClassify');
 
 const Post = {
-	getAllPosts: (req, res) => {
+	getAll: (req, res) => {
 		switch (req.query.sort) {
 			case 'new':
 				db.query(
@@ -22,7 +22,7 @@ const Post = {
 			default:
 			case 'best':
 				db.query(
-					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
+					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (t.total ) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (t.total) + 0.9604) /(t.total ) / (1 + 3.8416 /  (t.total)) AS ci_lower_bound ' +
 						'FROM posts ' +
 						'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
 						'INNER JOIN (SELECT post_id, count(*) AS total from post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
@@ -48,7 +48,7 @@ const Post = {
 		// }
 	},
 
-	get: (req, res) => {
+	findOne: (req, res) => {
 		db.query(
 			'SELECT * FROM ?? WHERE posts.post_id = ?',
 			['posts', req.params.postID],
@@ -63,7 +63,7 @@ const Post = {
 	// updatePost: (req, res) => {
 
 	// },
-	delete: (req, res) => {
+	deleteOne: (req, res) => {
 		if (req.session.isLoggedIn) {
 			db.query(
 				//On vérifie  que l'utilisateur connecté est bien l'utilisateur qui a posté la publication
@@ -290,7 +290,7 @@ const Post = {
 				.then(response => {
 					//console.log(response.data[0].classification);
 					if (response.data[0].textCoverage >= 0.5) {
-						const categories = relevantCategories(response.data[0]);
+						const categories = getRelevantCategories(response.data[0]);
 						//console.log(categories)
 						db.query(
 							'INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
@@ -346,7 +346,7 @@ const Post = {
 				.then(response => {
 					//console.log(response.data[0].classification);
 					if (response.data[0].textCoverage >= 0.5) {
-						const categories = relevantCategories(response.data[0]);
+						const categories = getRelevantCategories(response.data[0]);
 						//console.log(categories)
 						db.query(
 							'INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
@@ -402,8 +402,10 @@ const Post = {
 };
 
 //On veut prendre seulement les catégories qui sont pertinentes
-function relevantCategories(data) {
+function getRelevantCategories(data) {
 	//Remarque: possibilité de sort(function (a,b){return a.p > b.p;}) au lieu de passer par un Map
+
+	//On créé un dictionnaire liant une probabilité à une catégorie
 	var probaOfCategory = new Map([]);
 	data.classification.forEach(category => {
 		//console.log(`Name: ${category.className}, Confidence: ${category.p}`);
@@ -413,7 +415,7 @@ function relevantCategories(data) {
 	const probabilities = Array.from(probaOfCategory.keys())
 		.sort()
 		.reverse();
-	//On supprime les probabilités qui ne sont pas assez grandes
+	//On supprime les probabilités qui ne sont pas assez grandes (on prend seulement les catégories qui n'ont pas une grande différence par rapport à la première catégorie)
 	for (index = 1; index < probabilities.length; index++) {
 		if (probabilities[0] - probabilities[index] > 0.1) {
 			//0.1 est un chiffre arbitraire

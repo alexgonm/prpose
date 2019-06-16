@@ -54,11 +54,11 @@ app
 	// 	})
 	// )
 
-	.use('/api', require('./routes/index'))
-	.use('/api/user', require('./routes/users'))
-	.use('/api/theme', require('./routes/themes'))
-	.use('/api/post', require('./routes/posts'))
-	.use('/api/comment', require('./routes/comments'))
+	.use(require('./routes/authentication'))
+	.use('/user', require('./routes/users'))
+	.use('/theme', require('./routes/themes'))
+	.use('/post', require('./routes/posts'))
+	.use('/comment', require('./routes/comments'))
 
 	.use((req, res, next) => {
 		res.sendStatus(404);

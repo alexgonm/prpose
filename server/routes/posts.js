@@ -5,13 +5,13 @@ const router = express.Router();
 
 router
 	//
-	.get('/all', Post.getAllPosts)
+	.get('/all', Post.getAll)
 	//
 	.route('/:postID')
 	//
-	.get(Post.get)
+	.get(Post.findOne)
 	//
-	.delete(Post.delete);
+	.delete(Post.deleteOne);
 
 router
 	//

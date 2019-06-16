@@ -3,6 +3,7 @@ const db = require('../models/db');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+const Auth = require('../controllers/authController');
 
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -21,7 +22,7 @@ router
 			res.redirect('/');
 		}
 	})
-	.post((req, res, next) => {
+	.post((req, res) => {
 		var username = req.body.username;
 		var password = req.body.password;
 		if (username && password) {
@@ -64,67 +65,8 @@ router
 				res.sendStatus(403);
 			}
 		})
-		.post((req, res) => {
-			if (!req.session.isLoggedIn) {
-				const user = req.body.username;
-				const email = req.body.email;
-				const psw = req.body.password;
-				const age = req.body.age;
-				const bio = req.body.biography;
-				db.query(
-					'SELECT users.username FROM users WHERE users.username = ? OR users.email = ?',
-					[user, email],
-					(err, rows) => {
-						if (err) res.sendStatus(500);
-						//('Username/email already used.');
-						else if (rows.length > 0) res.sendStatus(409);
-						//Si l'utilisateur n'existe pas
-						else {
-							bcrypt.hash(psw, BCRYPT_SALT_ROUNDS).then(function(hash) {
-								db.query(
-									'INSERT INTO ??(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
-									[
-										'users',
-										'username',
-										'email',
-										'password',
-										'age',
-										'biography',
-										user,
-										email,
-										hash,
-										age,
-										bio
-									],
-									function(err, rows) {
-										if (err) {
-											console.log(err);
-											res.sendStatus(500);
-										}
-										res.sendStatus(200); //('Nice, you\'ve signed up. Welcome to PrPose.')
-										//res.redirect('/');
-									}
-								);
-							});
-						}
-					}
-				);
-			} else {
-				res.sendStatus(403);
-			}
-		});
+		.post(Auth.signup);
 
-router.get('/logout', (req, res) => {
-	if (!req.session.isLoggedIn) {
-		res.sendStatus(401);
-	} else {
-		req.session.destroy(err => {
-			if (err) {
-				return console.log(err);
-			}
-			res.sendStatus(200);
-		});
-	}
-});
+router.get('/logout', Auth.logout);
 
 module.exports = router;
