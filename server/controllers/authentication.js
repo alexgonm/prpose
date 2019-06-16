@@ -1,4 +1,4 @@
-const db = require('../models/db');
+const db = require('../models/database');
 const path = require('path');
 const bcrypt = require('bcrypt');
 

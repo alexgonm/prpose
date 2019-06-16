@@ -57,7 +57,7 @@ const Comment = {
 			//Pas le droit si l'utilisateur n'est pas connecté
 		} else res.sendStatus(401);
 	},
-	getChildren: (req, res) => {
+	getComments: (req, res) => {
 		db.query(
 			'SELECT ??.* FROM ?? JOIN (SELECT * FROM posts) ?? WHERE ?? = ?? AND ?? = ?',
 			[
@@ -169,6 +169,31 @@ const Comment = {
 		} else {
 			res.sendStatus(401);
 		}
+	},
+	newChildComment: (req, res) => {
+		if (req.session.isLoggedIn) {
+		}
+		db.query(
+			'INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
+			[
+				'comments',
+				'username',
+				'post_id',
+				'comment_id_parent',
+				'content',
+				req.session.username,
+				req.body.postID,
+				req.body.commentID,
+				req.body.commentContent
+			],
+			(err, rows) => {
+				if (err) {
+					res.sendStatus(500);
+				}
+				console.log('commentID créé', rows.insertID);
+				res.send(rows);
+			}
+		);
 	}
 };
 
