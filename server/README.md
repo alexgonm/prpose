@@ -33,7 +33,7 @@ Vous pouvez également entrer vos propres variables d'environnment. Pour cela aj
     SESS_SECRET=secret
     UCLASS_TOKEN=
 
-1. NODE*ENV peut être en \_development* ou en _production_.
+1. NODE_ENV peut être en _development_ ou en _production_.
 2. PORT est le port du serveur.
 3. DB_HOST, DB_USER, DB_PASSWORD et DB_DATABASE sont respectivement l'adresse, l'utilisateur, le mot de passe et le nom de la base de données.
 4. REDIS_HOST et REDIS_PORT concernent l'adresse du serveur Redis.
