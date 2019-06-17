@@ -17,12 +17,40 @@ const Post = {
 				);
 				break;
 			case 'top':
-				res.sendStatus(200); //TODO:
+				db.query(
+					'SELECT ??.*, u.positive, (t.total - u.positive) AS negative ' +
+						'FROM (??, ??, ??) ' +
+						'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
+						'INNER JOIN (SELECT post_id, count(*) AS total FROM post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
+						'WHERE ?? = ?? AND ?? = ?? AND ?? = ? ' +
+						'ORDER BY ?? DESC;',
+					[
+						'posts',
+						'posts',
+						'post_theme',
+						'themes',
+						'post_theme.post_id',
+						'posts.post_id',
+						'themes.theme',
+						'post_theme.theme',
+						'post_theme.theme',
+						req.params.theme,
+						'u.positive'
+					],
+					(err, rows) => {
+						if (err) {
+							console.log(err);
+							res.sendStatus(500);
+						}
+
+						res.send(rows);
+					}
+				);
 				break;
 			default:
 			case 'best':
 				db.query(
-					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (t.total ) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (t.total) + 0.9604) /(t.total ) / (1 + 3.8416 /  (t.total)) AS ci_lower_bound ' +
+					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (t.total ) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (t.total) + 0.9604) /(t.total ) / (1 + 3.8416 /  (t.total))) AS ci_lower_bound ' +
 						'FROM posts ' +
 						'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
 						'INNER JOIN (SELECT post_id, count(*) AS total from post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
@@ -278,7 +306,7 @@ const Post = {
 		}
 	},
 
-	//TODO: transformer les requêtes en transaction pour être sûr du résultats
+	//TODO: transformer les requêtes en transaction pour être sûr du résultats ou en promesse
 	createPost: (req, res) => {
 		//Si un utilisateur est connecté
 		if (req.session.isLoggedIn) {
@@ -383,8 +411,8 @@ const Post = {
 											console.log(rows.insertId);
 										}
 									);
-								} //res.sendStatus(200);
-								res.send(rows);
+								}
+								res.status(200).send(rows);
 							}
 						);
 					} else {

@@ -55,10 +55,10 @@ app
 	// )
 
 	.use(require('./routes/authentication'))
-	.use('/user', require('./routes/users'))
-	.use('/theme', require('./routes/themes'))
-	.use('/post', require('./routes/posts'))
-	.use('/comment', require('./routes/comments'))
+	.use('/u', require('./routes/users'))
+	.use('/t', require('./routes/themes'))
+	.use('/p', require('./routes/posts'))
+	.use('/c', require('./routes/comments'))
 
 	.use((req, res, next) => {
 		res.sendStatus(404);
