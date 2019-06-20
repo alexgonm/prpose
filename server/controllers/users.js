@@ -2,6 +2,7 @@ const db = require('../models/database');
 
 const User = {
 	getAll: (req, res) => {
+		//Obtenir tous les utilisateurs
 		db.query(
 			'SELECT ??, ??, ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
 			[
@@ -22,6 +23,7 @@ const User = {
 		);
 	},
 	findOne: (req, res) => {
+		//Obtenir un utilisateur
 		db.query(
 			'SELECT ??, ??, ??, ??, ?? FROM ?? WHERE username = ?',
 			[
@@ -42,6 +44,7 @@ const User = {
 		);
 	},
 	getPosts: (req, res) => {
+		//Obtenir les publications d'un utilisateur
 		db.query(
 			'SELECT posts.* FROM ??, ?? WHERE users.username = posts.username AND users.username = ? ORDER BY ?? DESC, ?? DESC',
 			[
@@ -60,6 +63,7 @@ const User = {
 		);
 	},
 	getUpvotes: (req, res) => {
+		//Obtenir les publications pour lesquels l'utilisateur a voté positivement
 		db.query(
 			'SELECT ??.* FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = ? ORDER BY ?? DESC, ?? DESC;',
 			[

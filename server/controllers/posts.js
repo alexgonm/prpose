@@ -3,8 +3,9 @@ const uClassify = require('../models/uClassify');
 
 const Post = {
 	getAll: (req, res) => {
+		//Obtenir tous les posts
 		switch (req.query.sort) {
-			case 'new':
+			case 'new': //Tri par nouvelle publication
 				db.query(
 					'SELECT * FROM ?? ORDER BY ?? DESC, ?? DESC',
 					['posts', 'publication_hour', 'publication_date'],
@@ -16,7 +17,7 @@ const Post = {
 					}
 				);
 				break;
-			case 'top':
+			case 'top': //Tri par les publications avec le plus d'upvote
 				db.query(
 					'SELECT ??.*, u.positive, (t.total - u.positive) AS negative ' +
 						'FROM (??, ??, ??) ' +
@@ -48,7 +49,7 @@ const Post = {
 				);
 				break;
 			default:
-			case 'best':
+			case 'best': //Tri par les publications les mieux votés par jour (en considérant le nombre total de votes et la part de votes positifs)
 				db.query(
 					'SELECT posts.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (t.total ) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (t.total) + 0.9604) /(t.total ) / (1 + 3.8416 /  (t.total))) AS ci_lower_bound ' +
 						'FROM posts ' +
@@ -66,17 +67,10 @@ const Post = {
 				);
 				break;
 		}
-		// } else {
-		// 	db.query('SELECT * FROM ??', ['posts'], (err, rows) => {
-		// 		if (err) {
-		// 			res.sendStatus(500);
-		// 		}
-		// 		res.send(rows);
-		// 	});
-		// }
 	},
 
 	findOne: (req, res) => {
+		//Obtenir une publication
 		db.query(
 			'SELECT * FROM ?? WHERE posts.post_id = ?',
 			['posts', req.params.postID],
@@ -84,7 +78,7 @@ const Post = {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.json(rows);
+				res.send(rows);
 			}
 		);
 	},
@@ -92,6 +86,7 @@ const Post = {
 
 	// },
 	deleteOne: (req, res) => {
+		//Supprmier une publication
 		if (req.session.isLoggedIn) {
 			db.query(
 				//On vérifie  que l'utilisateur connecté est bien l'utilisateur qui a posté la publication
@@ -128,6 +123,7 @@ const Post = {
 		} else res.sendStatus(401);
 	},
 	getComments: (req, res) => {
+		//Obtenir les commentaires d'une publications
 		switch (req.query.sort) {
 			case 'new':
 				db.query(
@@ -174,6 +170,7 @@ const Post = {
 		}
 	},
 	getThemes: (req, res) => {
+		//Obtenir les thèmes d'une publication
 		db.query(
 			'SELECT ??.* FROM ??, ??, ?? WHERE ?? = ?? AND ?? = ?? AND ?? = ?',
 			[
@@ -197,6 +194,7 @@ const Post = {
 		);
 	},
 	getChildren: (req, res) => {
+		//Obtenir les publications répondant à une publication
 		db.query(
 			'SELECT ??.* FROM ?? JOIN (SELECT * FROM posts) ?? WHERE ?? = ?? AND ?? = ?',
 			[
@@ -216,6 +214,7 @@ const Post = {
 		);
 	},
 	getUpvotes: (req, res) => {
+		//Obtenir les upvotes d'une publication
 		db.query(
 			'SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 1',
 			[
@@ -237,6 +236,7 @@ const Post = {
 		);
 	},
 	getDownvotes: (req, res) => {
+		//Obtenir les downvotes d'une publication
 		db.query(
 			'SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 0',
 			[
@@ -258,6 +258,7 @@ const Post = {
 		);
 	},
 	giveUpvote: (req, res) => {
+		//Donner un upvote à une pubilcation
 		if (req.session.isLoggedIn) {
 			db.query(
 				'INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
@@ -282,6 +283,7 @@ const Post = {
 		}
 	},
 	giveDownvote: (req, res) => {
+		//Donner un downvote à une publication
 		if (req.session.isLoggedIn) {
 			db.query(
 				'INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
@@ -308,6 +310,7 @@ const Post = {
 
 	//TODO: transformer les requêtes en transaction pour être sûr du résultats ou en promesse
 	createPost: (req, res) => {
+		//Poster un publication
 		//Si un utilisateur est connecté
 		if (req.session.isLoggedIn) {
 			const contentToClassify = JSON.stringify({
@@ -318,7 +321,9 @@ const Post = {
 				.then(response => {
 					//console.log(response.data[0].classification);
 					if (response.data[0].textCoverage >= 0.5) {
-						const categories = getRelevantCategories(response.data[0]);
+						const categories = getRelevantCategories(
+							response.data[0]
+						);
 						//console.log(categories)
 						db.query(
 							'INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
@@ -339,16 +344,22 @@ const Post = {
 								console.log(rows);
 								const postID = rows.insertId;
 								//console.log('postID créé: ', postID)
-								for (index = 0; index < categories.length; index++) {
-									db.query('INSERT INTO ??(??, ??) VALUES (?, ?);', [
-										'post_theme',
-										'post_id',
-										'theme',
-										postID,
-										categories[index]
-									]);
+								for (
+									index = 0;
+									index < categories.length;
+									index++
+								) {
+									db.query(
+										'INSERT INTO ??(??, ??) VALUES (?, ?);',
+										[
+											'post_theme',
+											'post_id',
+											'theme',
+											postID,
+											categories[index]
+										]
+									);
 								}
-								//res.sendStatus(200);
 								res.send(rows);
 							}
 						);
@@ -365,6 +376,7 @@ const Post = {
 		}
 	},
 	createChild: (req, res) => {
+		//Poster une publication répondant à une publication
 		if (req.session.isLoggedIn) {
 			const contentToClassify = JSON.stringify({
 				texts: [req.body.postContent]
@@ -374,7 +386,9 @@ const Post = {
 				.then(response => {
 					//console.log(response.data[0].classification);
 					if (response.data[0].textCoverage >= 0.5) {
-						const categories = getRelevantCategories(response.data[0]);
+						const categories = getRelevantCategories(
+							response.data[0]
+						);
 						//console.log(categories)
 						db.query(
 							'INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
@@ -397,7 +411,11 @@ const Post = {
 								console.log(rows);
 								const postID = rows.insertId;
 								//console.log('postID créé: ', postID)
-								for (index = 0; index < categories.length; index++) {
+								for (
+									index = 0;
+									index < categories.length;
+									index++
+								) {
 									db.query(
 										'INSERT INTO ??(??, ??) VALUES (?, ?);',
 										[

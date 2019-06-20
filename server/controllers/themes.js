@@ -6,7 +6,7 @@ const Theme = {
 			if (err) {
 				res.sendStatus(500);
 			}
-			res.json(rows);
+			res.send(rows);
 		});
 	},
 	findOne: (req, res) => {
@@ -17,16 +17,16 @@ const Theme = {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.json(rows);
+				res.send(rows);
 			}
 		);
 	},
 	getPosts: (req, res) => {
 		switch (req.query.sort) {
 			case 'new':
-				'SELECT ?? FROM ??, ??, ?? ORDER BY ?? DESC, ?? DESC',
+				'SELECT ??.* FROM ??, ??, ?? ORDER BY ?? DESC, ?? DESC',
 					[
-						'posts.post_id',
+						'posts',
 						'posts',
 						'post_theme',
 						'themes',
@@ -57,11 +57,11 @@ const Theme = {
 							res.sendStatus(500);
 						}
 
-						const posts = rows.map(row => {
-							return { postId: row.post_id };
-						});
+						// const posts = rows.map(row => {
+						// 	return { postId: row.post_id };
+						// });
 
-						res.send(posts);
+						res.send(rows);
 					}
 				);
 				break;
@@ -90,11 +90,11 @@ const Theme = {
 						console.log(err);
 						if (err) res.sendStatus(500);
 
-						const posts = rows.map(row => {
-							return { postId: row.post_id };
-						});
+						// const posts = rows.map(row => {
+						// 	return { postId: row.post_id };
+						// });
 
-						res.send(posts);
+						res.send(rows);
 					}
 				);
 				break;

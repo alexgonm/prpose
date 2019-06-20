@@ -4,8 +4,6 @@ const bcrypt = require('bcrypt');
 const router = express.Router();
 const Auth = require('../controllers/authentication');
 
-const BCRYPT_SALT_ROUNDS = 10;
-
 router
 	.get('/', (req, res) => {
 		//res.setHeader('Content-Type', 'text/html');
@@ -14,23 +12,23 @@ router
 
 	.route('/login')
 	.get((req, res) => {
-		if (!req.session.isLoggedIn) {
-			res.setHeader('Content-type', 'text/html');
-			res.sendFile(path.join(__dirname, '/../login.html'));
+		if (req.session.isLoggedIn) {
+			res.sendStatus(401);
 		} else {
-			res.redirect('/');
+			res.sendStatus(200);
 		}
 	})
-	.post(Auth.login),
-	router
-		.route('/signup')
-		.get((req, res) => {
-			if (!req.session.isLoggedIn) res.sendStatus(200);
-			else {
-				res.sendStatus(403);
-			}
-		})
-		.post(Auth.signup);
+	.post(Auth.login);
+router
+	.route('/signup')
+	.get((req, res) => {
+		if (req.session.isLoggedIn) {
+			res.sendStatus(401);
+		} else {
+			res.sendStatus(200);
+		}
+	})
+	.post(Auth.signup);
 
 router.get('/logout', Auth.logout);
 

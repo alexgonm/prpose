@@ -10,6 +10,8 @@ const Auth = {
 			const psw = req.body.password;
 			const age = req.body.age;
 			const bio = req.body.biography;
+			const BCRYPT_SALT_ROUNDS = 10;
+			//On cherche d'abord s'il existe un utilisateur qui possède le même pseudo ou la même adresse email
 			db.query(
 				'SELECT users.username FROM users WHERE users.username = ? OR users.email = ?',
 				[user, email],
@@ -19,6 +21,7 @@ const Auth = {
 					else if (rows.length > 0) res.sendStatus(409);
 					//Si l'utilisateur n'existe pas
 					else {
+						//On chiffre le passport et on envoie le tout à la base de données
 						bcrypt.hash(psw, BCRYPT_SALT_ROUNDS).then(hash => {
 							db.query(
 								'INSERT INTO ??(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
@@ -55,17 +58,20 @@ const Auth = {
 	login: (req, res) => {
 		var username = req.body.username;
 		var password = req.body.password;
+		//On cherche s'il existe un utilisateur avoir le même pseudo
 		if (username && password) {
 			db.query(
 				'SELECT * FROM ?? WHERE username = ?',
 				['users', username],
-				(err, rows, fields) => {
+				(err, rows) => {
+					//Si on a trouvé un utilisateur avec le même pseudo
 					if (rows.length > 0) {
 						var hash = rows.map(row => {
 							return row.password;
 						});
-						//console.log(hash[0])
+						//On compare le mot de passe de la base de données et celui fourni
 						bcrypt.compare(password, hash[0]).then(result => {
+							//Si c'est le bon mot de passe on ajoute au serveur REDIS l'utilisateur
 							if (result) {
 								req.session.username = username;
 								req.session.isLoggedIn = true;
@@ -88,9 +94,11 @@ const Auth = {
 		}
 	},
 	logout: (req, res) => {
+		//Déconnexion
 		if (!req.session.isLoggedIn) {
 			res.sendStatus(401);
 		} else {
+			//Suppression de la session
 			req.session.destroy(err => {
 				if (err) {
 					return console.log(err);
