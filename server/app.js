@@ -24,8 +24,7 @@ const SESS_SECURE = NODE_ENV === 'production';
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
-app
-	.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({ extended: true }))
 	.use(bodyParser.json())
 
 	.use(
@@ -40,8 +39,8 @@ app
 				secure: SESS_SECURE
 			},
 			store: new redisStore({
-				host: 'localhost',
-				port: 6379,
+				host: REDIS_HOST,
+				port: REDIS_PORT,
 				client: redisClient
 			})
 		})
