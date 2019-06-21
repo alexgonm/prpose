@@ -1,5 +1,5 @@
 const db = require('../models/database');
-const uClassify = require('../models/uClassify');
+const uClassify = require('../models/uClassify').instance;
 
 const Post = {
 	getAll: (req, res) => {

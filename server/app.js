@@ -46,12 +46,12 @@ app.use(bodyParser.urlencoded({ extended: true }))
 		})
 	)
 
-	// .use(
-	// 	cors({
-	// 		//TODO:
-	// 		credentials: true
-	// 	})
-	// )
+	.use(
+		cors({
+			origin: 'http://localhost:3001',
+			credentials: true
+		})
+	)
 
 	.use(require('./routes/authentication'))
 	.use('/u', require('./routes/users'))
