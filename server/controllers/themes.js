@@ -57,11 +57,17 @@ const Theme = {
 							res.sendStatus(500);
 						}
 
-						// const posts = rows.map(row => {
-						// 	return { postId: row.post_id };
-						// });
-
-						res.send(rows);
+						const posts = rows.map(row => {
+							return {
+								postId: row.post_id,
+								username: row.username,
+								title: row.title,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
+						res.send(posts);
 					}
 				);
 				break;
@@ -90,11 +96,18 @@ const Theme = {
 						console.log(err);
 						if (err) res.sendStatus(500);
 
-						// const posts = rows.map(row => {
-						// 	return { postId: row.post_id };
-						// });
+						const posts = rows.map(row => {
+							return {
+								postId: row.post_id,
+								username: row.username,
+								title: row.title,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
 
-						res.send(rows);
+						res.send(posts);
 					}
 				);
 				break;
