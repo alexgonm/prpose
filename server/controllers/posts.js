@@ -8,12 +8,23 @@ const Post = {
 			case 'new': //Tri par nouvelle publication
 				db.query(
 					'SELECT * FROM ?? ORDER BY ?? DESC, ?? DESC',
-					['posts', 'publication_hour', 'publication_date'],
+					['posts', 'publication_date', 'publication_hour'],
 					(err, rows) => {
 						if (err) {
 							res.sendStatus(500);
 						}
-						res.send(rows);
+						const posts = rows.map(row => {
+							return {
+								postId: row.post_id,
+								parentId: row.post_parent_id,
+								username: row.username,
+								title: row.title,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
+						res.send(posts);
 					}
 				);
 				break;
@@ -47,6 +58,7 @@ const Post = {
 						const posts = rows.map(row => {
 							return {
 								postId: row.post_id,
+								parentId: row.post_parent_id,
 								username: row.username,
 								title: row.title,
 								content: row.content,
@@ -75,6 +87,7 @@ const Post = {
 						const posts = rows.map(row => {
 							return {
 								postId: row.post_id,
+								parentId: row.post_parent_id,
 								username: row.username,
 								title: row.title,
 								content: row.content,
@@ -98,7 +111,18 @@ const Post = {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.send(rows);
+				const posts = rows.map(row => {
+					return {
+						postId: row.post_id,
+						parentId: row.post_parent_id,
+						username: row.username,
+						title: row.title,
+						content: row.content,
+						publicationDate: row.publication_date,
+						publicationHour: row.publication_hour
+					};
+				});
+				res.send(posts);
 			}
 		);
 	},
@@ -157,14 +181,25 @@ const Post = {
 						'NULL',
 						'comments.post_id',
 						req.params.postID,
-						'publication_hour',
-						'publication_date'
+						'comments.publication_date',
+						'comments.publication_hour'
 					],
 					(err, rows) => {
 						if (err) {
 							res.sendStatus(500);
 						}
-						res.send(rows);
+						const comments = rows.map(row => {
+							return {
+								commentId: row.comment_id,
+								parentId: row.comment_id_parent,
+								username: row.username,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
+
+						res.send(comments);
 					}
 				);
 				break;
@@ -187,6 +222,7 @@ const Post = {
 						const comments = rows.map(row => {
 							return {
 								commentId: row.comment_id,
+								parentId: row.comment_id_parent,
 								username: row.username,
 								content: row.content,
 								publicationDate: row.publication_date,
@@ -240,16 +276,27 @@ const Post = {
 			(err, rows) => {
 				console.log(err);
 				if (err) res.sendStatus(500);
-				res.send(rows);
+				const posts = rows.map(row => {
+					return {
+						postId: row.post_id,
+						parentId: row.post_parent_id,
+						username: row.username,
+						title: row.title,
+						content: row.content,
+						publicationDate: row.publication_date,
+						publicationHour: row.publication_hour
+					};
+				});
+				res.send(posts);
 			}
 		);
 	},
 	getUpvotes: (req, res) => {
 		//Obtenir les upvotes d'une publication
 		db.query(
-			'SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 1',
+			'SELECT count(??) AS upvotes FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 1',
 			[
-				'post_vote',
+				'post_vote.upvote',
 				'posts',
 				'post_vote',
 				'posts.post_id',
@@ -260,6 +307,7 @@ const Post = {
 			],
 			(err, rows) => {
 				if (err) {
+					console.log(err);
 					res.sendStatus(500);
 				}
 				res.send(rows);
@@ -269,9 +317,9 @@ const Post = {
 	getDownvotes: (req, res) => {
 		//Obtenir les downvotes d'une publication
 		db.query(
-			'SELECT count(??.*) FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 0',
+			'SELECT count(??) AS downvotes FROM ??, ?? WHERE ?? = ?? AND ?? = ? AND ?? = 0',
 			[
-				'post_vote',
+				'post_vote.upvote',
 				'posts',
 				'post_vote',
 				'posts.post_id',
@@ -300,10 +348,11 @@ const Post = {
 					'post_id',
 					1,
 					req.session.username,
-					req.body.postID
+					req.params.postID
 				],
 				(err, rows) => {
 					if (err) {
+						console.log(err);
 						res.sendStatus(500);
 					}
 					res.send(rows);
@@ -325,7 +374,7 @@ const Post = {
 					'post_id',
 					0,
 					req.session.username,
-					req.body.postID
+					req.params.postID
 				],
 				(err, rows) => {
 					if (err) {
@@ -337,6 +386,28 @@ const Post = {
 		} else {
 			res.sendStatus(401);
 		}
+	},
+	//Savoir si un upvote est possible
+	getVoteState: (req, res) => {
+		db.query(
+			'SELECT * FROM ?? WHERE ?? = ? AND ?? = ?',
+			[
+				'post_vote',
+				'post_id',
+				req.params.postID,
+				'username',
+				req.session.username
+			],
+			(err, rows) => {
+				if (err) {
+					res.sendStatus(500);
+				} else if (rows.length > 0) {
+					res.sendStatus(403);
+				} else {
+					res.sendStatus(200);
+				}
+			}
+		);
 	},
 
 	//TODO: transformer les requêtes en transaction pour être sûr du résultats ou en promesse

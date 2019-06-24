@@ -1,5 +1,4 @@
 const db = require('../models/database');
-const path = require('path');
 const bcrypt = require('bcrypt');
 
 const Auth = {
@@ -8,8 +7,6 @@ const Auth = {
 			const user = req.body.username;
 			const email = req.body.email;
 			const psw = req.body.password;
-			const age = req.body.age;
-			const bio = req.body.biography;
 			const BCRYPT_SALT_ROUNDS = 10;
 			//On cherche d'abord s'il existe un utilisateur qui possède le même pseudo ou la même adresse email
 			db.query(
@@ -24,19 +21,15 @@ const Auth = {
 						//On chiffre le passport et on envoie le tout à la base de données
 						bcrypt.hash(psw, BCRYPT_SALT_ROUNDS).then(hash => {
 							db.query(
-								'INSERT INTO ??(??, ??, ??, ??, ??) VALUES (?, ?, ?, ?, ?)',
+								'INSERT INTO ??(??, ??, ??) VALUES (?, ?, ?)',
 								[
 									'users',
 									'username',
 									'email',
 									'password',
-									'age',
-									'biography',
 									user,
 									email,
-									hash,
-									age,
-									bio
+									hash
 								],
 								(err, rows) => {
 									if (err) {
@@ -75,6 +68,7 @@ const Auth = {
 							if (result) {
 								req.session.username = username;
 								req.session.isLoggedIn = true;
+
 								//console.log([req.session.username, req.session.isLoggedIn])
 								req.session.save(err => {
 									// session saved
@@ -105,6 +99,16 @@ const Auth = {
 				}
 				res.sendStatus(200);
 			});
+		}
+	},
+	isLoggedIn: (req, res) => {
+		if (
+			req.session.isLoggedIn &&
+			req.session.username === req.body.username
+		) {
+			res.sendStatus(200);
+		} else {
+			res.sendStatus(403);
 		}
 	}
 };

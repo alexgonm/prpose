@@ -1,6 +1,4 @@
 const express = require('express');
-const path = require('path');
-const bcrypt = require('bcrypt');
 const router = express.Router();
 const Auth = require('../controllers/authentication');
 
@@ -9,7 +7,7 @@ router
 		//res.setHeader('Content-Type', 'text/html');
 		res.sendStatus(200);
 	})
-
+	.post('/isLoggedIn', Auth.isLoggedIn)
 	.route('/login')
 	.get((req, res) => {
 		if (req.session.isLoggedIn) {
@@ -30,6 +28,6 @@ router
 	})
 	.post(Auth.signup);
 
-router.get('/logout', Auth.logout);
+router.post('/logout', Auth.logout);
 
 module.exports = router;

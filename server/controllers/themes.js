@@ -24,21 +24,40 @@ const Theme = {
 	getPosts: (req, res) => {
 		switch (req.query.sort) {
 			case 'new':
-				'SELECT ??.* FROM ??, ??, ?? ORDER BY ?? DESC, ?? DESC',
+				db.query(
+					'SELECT ??.* FROM ??, ??, ?? WHERE ?? = ?? AND ?? = ?? AND ?? = ? ORDER BY ?? DESC, ?? DESC',
 					[
 						'posts',
 						'posts',
 						'post_theme',
 						'themes',
-						'posts.publication_hour',
-						'posts.publication_date'
+						'posts.post_id',
+						'post_theme.post_id',
+						'themes.theme',
+						'post_theme.theme',
+						'themes.theme',
+						req.params.theme,
+						'posts.publication_date',
+						'posts.publication_hour'
 					],
 					(err, rows) => {
 						if (err) {
 							res.sendStatus(500);
 						}
-						res.send(rows);
-					};
+						const posts = rows.map(row => {
+							return {
+								postId: row.post_id,
+								parentId: row.post_parent_id,
+								username: row.username,
+								title: row.title,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
+						res.send(posts);
+					}
+				);
 				break;
 			default:
 			case 'best':
@@ -60,6 +79,7 @@ const Theme = {
 						const posts = rows.map(row => {
 							return {
 								postId: row.post_id,
+								parentId: row.post_parent_id,
 								username: row.username,
 								title: row.title,
 								content: row.content,
@@ -99,6 +119,7 @@ const Theme = {
 						const posts = rows.map(row => {
 							return {
 								postId: row.post_id,
+								parentId: row.post_parent_id,
 								username: row.username,
 								title: row.title,
 								content: row.content,
@@ -106,7 +127,6 @@ const Theme = {
 								publicationHour: row.publication_hour
 							};
 						});
-
 						res.send(posts);
 					}
 				);

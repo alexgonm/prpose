@@ -35,7 +35,6 @@ app.use(bodyParser.urlencoded({ extended: true }))
 			saveUninitialized: true,
 			cookie: {
 				maxAge: 600000000,
-				sameSite: true,
 				secure: SESS_SECURE
 			},
 			store: new redisStore({
@@ -49,7 +48,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 	.use(
 		cors({
 			origin: 'http://localhost:3001',
-			credentials: true
+			credentials: true,
+			methods: ['GET', 'PUT', 'POST', 'DELETE']
 		})
 	)
 

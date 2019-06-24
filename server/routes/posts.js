@@ -25,6 +25,8 @@ router
 	//
 	.get('/:postID/downvotes', Post.getDownvotes)
 	//
+	.get('/:postID/voteState', Post.getVoteState)
+	//
 	.post('/createPost', Post.createPost)
 	//
 	.post('/createChildPost', Post.createChild)

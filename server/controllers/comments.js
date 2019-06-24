@@ -7,7 +7,18 @@ const Comment = {
 			if (err) {
 				res.sendStatus(500);
 			}
-			res.json(rows);
+			const comments = rows.map(row => {
+				return {
+					commentId: row.comment_id,
+					parentId: row.comment_id_parent,
+					username: row.username,
+					content: row.content,
+					publicationDate: row.publication_date,
+					publicationHour: row.publication_hour
+				};
+			});
+
+			res.send(comments);
 		});
 	},
 	findOne: (req, res) => {
@@ -19,7 +30,18 @@ const Comment = {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.json(rows);
+				const comments = rows.map(row => {
+					return {
+						commentId: row.comment_id,
+						parentId: row.comment_id_parent,
+						username: row.username,
+						content: row.content,
+						publicationDate: row.publication_date,
+						publicationHour: row.publication_hour
+					};
+				});
+
+				res.send(comments);
 			}
 		);
 	},
@@ -75,7 +97,18 @@ const Comment = {
 			],
 			(err, rows) => {
 				if (err) res.sendStatus(500);
-				res.send(rows);
+				const comments = rows.map(row => {
+					return {
+						commentId: row.comment_id,
+						parentId: row.comment_id_parent,
+						username: row.username,
+						content: row.content,
+						publicationDate: row.publication_date,
+						publicationHour: row.publication_hour
+					};
+				});
+
+				res.send(comments);
 			}
 		);
 	},

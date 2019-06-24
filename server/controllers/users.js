@@ -83,7 +83,18 @@ const User = {
 				if (err) {
 					res.sendStatus(500);
 				}
-				res.json(rows);
+				const posts = rows.map(row => {
+					return {
+						postId: row.post_id,
+						parentId: row.post_parent_id,
+						username: row.username,
+						title: row.title,
+						content: row.content,
+						publicationDate: row.publication_date,
+						publicationHour: row.publication_hour
+					};
+				});
+				res.send(posts);
 			}
 		);
 	}
