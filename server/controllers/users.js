@@ -4,13 +4,11 @@ const User = {
 	getAll: (req, res) => {
 		//Obtenir tous les utilisateurs
 		db.query(
-			'SELECT ??, ??, ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
+			'SELECT ??, ??, ?? FROM ?? ORDER BY creation_date DESC',
 			[
 				'username',
-				'age',
 				'creation_date',
-				'creation_hour',
-				'biography',
+				'creation_hour',,
 				'users'
 			],
 			(err, rows) => {
@@ -25,13 +23,11 @@ const User = {
 	findOne: (req, res) => {
 		//Obtenir un utilisateur
 		db.query(
-			'SELECT ??, ??, ??, ??, ?? FROM ?? WHERE username = ?',
+			'SELECT ??, ??, ?? FROM ?? WHERE username = ?',
 			[
 				'username',
-				'age',
 				'creation_date',
 				'creation_hour',
-				'biography',
 				'users',
 				req.params.username
 			],
