@@ -29,24 +29,28 @@ const Post = {
 				);
 				break;
 			case 'top': //Tri par les publications avec le plus d'upvote
-				db.query('SELECT posts.*, count(post_vote.post_id) as upvotes FROM posts, post_vote WHERE posts.post_id = post_vote.post_id GROUP BY posts.post_id ORDER BY upvotes DESC', (err, rows) => {
-					if (err) {
-						console.log(err)
-						res.sendStatus(500)
+				db.query(
+					'SELECT posts.*, count(post_vote.post_id) as upvotes FROM posts, post_vote WHERE posts.post_id = post_vote.post_id GROUP BY posts.post_id ORDER BY upvotes DESC',
+					(err, rows) => {
+						if (err) {
+							console.log(err);
+							res.sendStatus(500);
+						}
+						const posts = rows.map(row => {
+							return {
+								postId: row.post_id,
+								parentId: row.post_parent_id,
+								username: row.username,
+								title: row.title,
+								content: row.content,
+								publicationDate: row.publication_date,
+								publicationHour: row.publication_hour
+							};
+						});
+						res.send(rows);
 					}
-					const posts = rows.map(row => {
-						return {
-							postId: row.post_id,
-							parentId: row.post_parent_id,
-							username: row.username,
-							title: row.title,
-							content: row.content,
-							publicationDate: row.publication_date,
-							publicationHour: row.publication_hour
-						};
-					});
-					res.send(rows);
-				})
+				);
+
 				break;
 			default:
 			case 'best': //Tri par les publications les mieux votés par jour (en considérant le nombre total de votes et la part de votes positifs)
