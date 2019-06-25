@@ -23,6 +23,12 @@ class Home extends Component {
 					method: value => {
 						this.handleSelect(value);
 					}
+				},
+				{
+					name: 'top',
+					method: value => {
+						this.handleSelect(value);
+					}
 				}
 			],
 			sort: 'best',
