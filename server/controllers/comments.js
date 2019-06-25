@@ -87,18 +87,22 @@ const Comment = {
 	getComments: (req, res) => {
 		// Obtenir les commentaires enfants d'un commentaire
 		db.query(
-			'SELECT ??.* FROM ?? JOIN (SELECT * FROM posts) ?? WHERE ?? = ?? AND ?? = ?',
+			'SELECT ??.* FROM ?? INNER JOIN (SELECT * FROM ?? WHERE ?? IS NOT NULL) ?? ON ?? = ?? WHERE ?? = ?',
 			[
 				'children',
 				'comments',
+				'comments',
+				'comments.comment_id_parent',
 				'children',
-				'parent.post_id',
-				'children.post_parent_id',
-				'children.post_id',
+				'comments.comment_id',
+				'children.comment_id',
+				'children.comment_id_parent',
 				req.params.commentID
 			],
 			(err, rows) => {
-				if (err) res.sendStatus(500);
+				if (err) {
+					res.sendStatus(500);
+				}
 				const comments = rows.map(row => {
 					return {
 						commentId: row.comment_id,
@@ -118,7 +122,7 @@ const Comment = {
 	getUpvotes: (req, res) => {
 		//Obtenir le nombre d'upvotes d'un commentaire
 		db.query(
-			'SELECT count(comment_vote.*) AS upvotes FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 1',
+			'SELECT count(comment_vote.comment_id) AS upvotes FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 1',
 			['comments', 'comment_vote', req.params.commentID],
 			(err, rows) => {
 				if (err) {
@@ -131,7 +135,7 @@ const Comment = {
 	getDownvotes: (req, res) => {
 		//Obtenir le nombre de downvotes d'un commentaire
 		db.query(
-			'SELECT count(comment_vote.*) AS downvotes FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 0',
+			'SELECT count(comment_vote.comment_id) AS downvotes FROM ??, ?? WHERE comments.comment_id = comment_vote.comment_id AND comments.comment_id = ? AND comment_vote.upvote = 0',
 			['comments', 'comment_vote', req.params.commentID],
 			(err, rows) => {
 				if (err) {
@@ -206,8 +210,9 @@ const Comment = {
 				(err, rows) => {
 					if (err) {
 						res.sendStatus(500);
+						console.log(err);
 					}
-					console.log('commentID créé', rows.insertID);
+
 					res.send(rows);
 				}
 			);
@@ -223,20 +228,20 @@ const Comment = {
 			'INSERT INTO ??(??, ??, ??, ??) VALUES (?, ?, ?, ?)',
 			[
 				'comments',
-				'username',
-				'post_id',
 				'comment_id_parent',
+				'post_id',
+				'username',
 				'content',
-				req.session.username,
-				req.body.postID,
 				req.body.parentId,
+				req.body.postID,
+				req.session.username,
 				req.body.commentContent
 			],
 			(err, rows) => {
 				if (err) {
 					res.sendStatus(500);
+					console.log(err);
 				}
-				console.log('commentID créé', rows.insertID);
 				res.send(rows);
 			}
 		);

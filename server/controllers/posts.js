@@ -148,7 +148,7 @@ const Post = {
 				],
 				(err, rows) => {
 					//Si c'est bien lui
-					if (rows.length > 1) {
+					if (rows.length > 0) {
 						db.query(
 							'DELETE FROM ?? WHERE posts.post_id = ?',
 							['posts', req.params.postID],
@@ -206,18 +206,23 @@ const Post = {
 			default:
 			case 'top':
 				db.query(
-					'SELECT ??.* FROM ??, ?? INNER JOIN (SELECT comment_id, count(*) AS positive FROM comment_vote WHERE comment_vote.upvote = 1 GROUP BY comment_id) u ON u.comment_id = comments.comment_id  WHERE ?? = ?? AND ?? = ?? AND ?? = ? ' +
-						''[
-							('comments',
-							'comments',
-							'posts',
-							'posts.post_id',
-							'comments.post_id',
-							'comments.comment_id_parent',
-							'NULL',
-							'comments.post_id',
-							req.params.postID)
-						],
+					'SELECT ??.*, count(??) AS upvotes FROM ??, ??, ?? WHERE ?? = ?? AND ?? = ?? AND ?? IS NULL AND ?? = ? GROUP BY ?? ORDER BY ??',
+					[
+						'comments',
+						'comment_vote.comment_id',
+						'comments',
+						'posts',
+						'comment_vote',
+						'posts.post_id',
+						'comments.post_id',
+						'comments.comment_id',
+						'comment_vote.comment_id',
+						'comments.comment_id_parent',
+						'comments.post_id',
+						req.params.postID,
+						'comments.comment_id',
+						'upvotes'
+					],
 					(err, rows) => {
 						if (err) {
 							console.log(err);

@@ -34,6 +34,6 @@ router
 	.post('/newComment', Comment.newComment)
 
 	//Publier un commentaire enfant
-	.post('/:commentID/newChildComment', Comment.newChildComment);
+	.post('/newChildComment', Comment.newChildComment);
 
 module.exports = router;
