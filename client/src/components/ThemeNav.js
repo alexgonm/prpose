@@ -5,7 +5,16 @@ import { NavLink } from 'react-router-dom';
 function ThemeNav(props) {
 	return (
 		<NavDropdown.Item>
-			<NavLink to={`/t/${props.theme}`}>{props.theme}</NavLink>
+			<NavLink
+				to={{
+					pathname: `/t/${props.theme}`,
+					state: {
+						theme: props.theme
+					}
+				}}
+			>
+				{props.theme}
+			</NavLink>
 		</NavDropdown.Item>
 	);
 }

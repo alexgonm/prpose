@@ -1,18 +1,15 @@
-import React from 'react';
-import { Form } from 'react-bootstrap';
-import { Button } from 'react-bootstrap';
-import { createPost } from '../api/Requests';
+import React, { Component } from 'react';
+import { Button, Form } from 'react-bootstrap';
+import { createCommentChild } from '../api/Requests';
 
-class NewPost extends React.Component {
-	constructor() {
+class NewChildComment extends Component {
+	constructor(props) {
 		super();
 		this.state = {
-			postTitle: '',
-			postContent: '',
-			open: false,
-			error: false
+			postID: props.postId,
+			parentId: props.parentId,
+			commentContent: ''
 		};
-
 		this.validateForm = this.validateForm.bind(this);
 		this.handleChange = this.handleChange.bind(this);
 		this.handleClick = this.handleClick.bind(this);
@@ -20,9 +17,7 @@ class NewPost extends React.Component {
 	}
 
 	validateForm() {
-		const valid =
-			this.state.postTitle.length > 0 &&
-			this.state.postContent.length > 150;
+		const valid = this.state.commentContent.length > 0;
 		return valid;
 	}
 
@@ -41,10 +36,15 @@ class NewPost extends React.Component {
 	}
 
 	handleSubmit(event) {
-		const postTitle = this.state.postTitle;
-		const postContent = this.state.postContent;
-		const informations = JSON.stringify({ postTitle, postContent });
-		createPost(informations)
+		const postID = this.state.postId;
+		const parentId = this.state.parentId;
+		const commentContent = this.state.commentContent;
+		const informations = JSON.stringify({
+			postID,
+			parentId,
+			commentContent
+		});
+		createCommentChild(informations)
 			.then(response => {
 				if (response.status === 200) {
 					window.location.reload();
@@ -82,25 +82,16 @@ class NewPost extends React.Component {
 						margin: '0 auto'
 					}}
 				>
-					Create a new post
+					New Comment?
 				</Button>
 				<div>
 					<div style={openStyle}>
 						<h3 style={{ marginBottom: '3%' }}>Create a post</h3>
 						<Form onSubmit={this.handleSubmit}>
-							<Form.Group controlId='postTitle' size='lg'>
-								<Form.Label>Title</Form.Label>
-								<Form.Control
-									autoFocus
-									type='text'
-									placeholder='Title'
-									onChange={this.handleChange}
-								/>
-							</Form.Group>
-							<Form.Group controlId='postContent' size='lg'>
+							<Form.Group controlId='commentContent' size='lg'>
 								<Form.Label>Content</Form.Label>
 								<Form.Control
-									placeholder='Leave your prposition here'
+									placeholder='Leave your thoughts'
 									onChange={this.handleChange}
 									as='textarea'
 									rows='3'
@@ -112,7 +103,7 @@ class NewPost extends React.Component {
 								type='submit'
 								disabled={!this.validateForm()}
 							>
-								POST
+								COMMENT
 							</Button>
 						</Form>
 					</div>
@@ -122,4 +113,4 @@ class NewPost extends React.Component {
 	}
 }
 
-export default NewPost;
+export default NewChildComment;

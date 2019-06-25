@@ -78,12 +78,22 @@ class UpvoteButton extends Component {
 	}
 
 	render() {
-		const buttonStyle = {
-			borderBottomLeftRadius: 20,
-			borderTopLeftRadius: 20,
-			borderBottomRightRadius: 0,
-			borderTopRightRadius: 0
-		};
+		var buttonStyle = {};
+		if (this.state.type === 'c') {
+			buttonStyle = buttonStyle = {
+				borderBottomLeftRadius: 20,
+				borderTopLeftRadius: 0,
+				borderBottomRightRadius: 20,
+				borderTopRightRadius: 0
+			};
+		} else {
+			buttonStyle = {
+				borderBottomLeftRadius: 20,
+				borderTopLeftRadius: 20,
+				borderBottomRightRadius: 0,
+				borderTopRightRadius: 0
+			};
+		}
 
 		return (
 			<div>
@@ -170,12 +180,22 @@ class DownvoteButton extends Component {
 	}
 
 	render() {
-		const buttonStyle = {
-			borderBottomLeftRadius: 0,
-			borderTopLeftRadius: 0,
-			borderBottomRightRadius: 20,
-			borderTopRightRadius: 20
-		};
+		var buttonStyle = {};
+		if (this.state.type === 'c') {
+			buttonStyle = buttonStyle = {
+				borderBottomLeftRadius: 20,
+				borderTopLeftRadius: 0,
+				borderBottomRightRadius: 20,
+				borderTopRightRadius: 0
+			};
+		} else {
+			buttonStyle = {
+				borderBottomLeftRadius: 0,
+				borderTopLeftRadius: 0,
+				borderBottomRightRadius: 20,
+				borderTopRightRadius: 20
+			};
+		}
 
 		return (
 			<div>
@@ -194,12 +214,21 @@ class DownvoteButton extends Component {
 }
 
 function VoteButtons(props) {
-	return (
-		<ButtonGroup>
-			<UpvoteButton id={props.id} type={props.type} />
-			<DownvoteButton id={props.id} type={props.type} />
-		</ButtonGroup>
-	);
+	if (props.type === 'c') {
+		return (
+			<ButtonGroup vertical>
+				<UpvoteButton id={props.id} type={props.type} />
+				<DownvoteButton id={props.id} type={props.type} />
+			</ButtonGroup>
+		);
+	} else {
+		return (
+			<ButtonGroup>
+				<UpvoteButton id={props.id} type={props.type} />
+				<DownvoteButton id={props.id} type={props.type} />
+			</ButtonGroup>
+		);
+	}
 }
 
 export { UpvoteButton, DownvoteButton, VoteButtons };

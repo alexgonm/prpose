@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import NavBar from './components/NavBar';
 import LoginForm from './containers/LoginForm';
 import SignUpForm from './containers/SignUpForm';
-//import ThemePage from './containers/ThemePage';
+import ThemePage from './containers/ThemePage';
+import PostPage from './containers/PostPage';
 import Home from './containers/Home';
 import { Route, HashRouter } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -31,32 +32,19 @@ class App extends Component {
 						<Route exact path='/' component={Home} />
 						<Route path='/login' component={LoginForm} />
 						<Route path='/signup' component={SignUpForm} />
+						<Route
+							path='/p/:postId'
+							render={props => <PostPage {...props} />}
+						/>
+						<Route
+							path='/t/:theme'
+							render={props => <ThemePage theme={props} />}
+						/>
 					</div>
 				</div>
 			</HashRouter>
 		);
 	}
 }
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
 
 export default App;

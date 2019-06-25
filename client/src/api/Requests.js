@@ -11,6 +11,25 @@ function getPost(postId) {
 	// });
 }
 
+//Nouvelle publication
+function createPost(informations) {
+	return API.post('/p/createPost', informations);
+}
+
+function createComment(informations) {
+	return API.post('/c/newComment', informations);
+}
+
+function createCommentChild(informations) {
+	return API.post('/c/newChildComment', informations);
+}
+function getCommentsOfPost(postId, sortOption) {
+	return API.get(`/p/${postId}/comments?sort=${sortOption}`);
+}
+
+function getCommentsOfComment(commentId) {
+	return API.get(`/c/${commentId}/comments`);
+}
 //Suppresion d'un commentaire ou d'une publication
 function deleteElement(type, id) {
 	return API.delete(`/${type}/${id}`);
@@ -46,8 +65,8 @@ function getUser(username) {
 	// });
 }
 
-function isLoggedIn(username) {
-	return API.get('/login', username);
+function isUserLoggedIn() {
+	return API.get('/isLoggedIn');
 }
 
 export {
@@ -57,5 +76,10 @@ export {
 	getThemes,
 	getThemesOfPost,
 	deleteElement,
-	isLoggedIn
+	isUserLoggedIn,
+	createPost,
+	createComment,
+	createCommentChild,
+	getCommentsOfPost,
+	getCommentsOfComment
 };

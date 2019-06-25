@@ -1,5 +1,6 @@
 import React from 'react';
 import { Jumbotron } from 'react-bootstrap';
+import NewPost from './NewPost';
 
 const Presentation = () => {
 	return (
@@ -11,6 +12,7 @@ const Presentation = () => {
 				Propose your own ideas and concepts to make the world a better
 				place.
 			</p>
+			<NewPost />
 		</Jumbotron>
 	);
 };

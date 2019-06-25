@@ -27,11 +27,11 @@ class SignUpForm extends React.Component {
 		);
 	}
 
-	handleChange = event => {
+	handleChange(event) {
 		this.setState({
 			[event.target.id]: event.target.value
 		});
-	};
+	}
 
 	signUp() {
 		const username = this.state.username;

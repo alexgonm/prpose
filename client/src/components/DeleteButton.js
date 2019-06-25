@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Button from 'react-bootstrap/Button';
-import { deleteElement, isLoggedIn } from '../api/Requests';
+import { deleteElement, isUserLoggedIn } from '../api/Requests';
 import { withRouter } from 'react-router-dom';
 
 class DeleteButton extends Component {
@@ -18,16 +18,17 @@ class DeleteButton extends Component {
 	}
 
 	isLoggedIn() {
-		const username = this.state.username;
-		const informations = JSON.stringify({ username });
-		isLoggedIn(informations)
+		console.log('io');
+		isUserLoggedIn()
 			.then(response => {
-				if (response.status === 200) {
+				console.log('fff');
+				console.log(response.data);
+				if (response.data.username === this.state.username) {
 					this.setState({
 						isLoggedIn: true
 					});
 				}
-				console.log(response.status);
+				console.log(this.state.isLoggedIn);
 			})
 			.catch(err => {
 				if (err.response) {
@@ -40,25 +41,36 @@ class DeleteButton extends Component {
 
 	delete() {
 		console.log('suppression');
-		// deleteElement(this.state.type, this.state.id).then(response => {
-		// 	if (response.status === 200) {
-		// 		this.props.history.push('/');
-		// 	}
-		// });
+		deleteElement(this.state.type, this.state.id).then(response => {
+			if (response.status === 200) {
+				this.props.history.push('/');
+			}
+		});
 	}
 
 	componentDidMount() {
 		this.isLoggedIn();
 	}
 	render() {
-		return this.state.isLoggedIn ? (
-			<Button onClick={this.delete}>Delete</Button>
-		) : null;
-		// if (this.state.isLoggedIn) {
-		// 	return <Button onClick={this.delete}>Delete</Button>;
-		// } else {
-		// 	return <div />;
-		// }
+		var buttonStyle = {
+			display: 'none'
+		};
+		if (this.state.isLoggedIn) {
+			buttonStyle = {
+				display: 'inline'
+			};
+		}
+
+		return (
+			<Button
+				style={buttonStyle}
+				onClick={this.delete}
+				variant='danger'
+				size='sm'
+			>
+				Delete
+			</Button>
+		);
 	}
 }
 

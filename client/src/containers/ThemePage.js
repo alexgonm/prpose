@@ -1,14 +1,16 @@
 import React from 'react';
+import Image from 'react-bootstrap/Image';
+import { withRouter } from 'react-router-dom';
 import Post from '../components/Post';
 import SortButton from '../components/SortButton';
-import API from '../api/Api';
 import Loading from '../components/Loading';
+import API from '../api/Api';
 
 class ThemePage extends React.Component {
 	constructor(props) {
 		super();
 		this.state = {
-			theme: props.theme,
+			theme: props.match.params.theme,
 			sortOptions: [
 				{
 					name: 'best',
@@ -67,6 +69,12 @@ class ThemePage extends React.Component {
 	}
 
 	componentDidMount() {
+		// 		const {theme} =this.props.match.params
+		// ;
+		// 		this.setState({
+		// 			theme: theme
+		// 		});
+		console.log(this.state.theme);
 		this.getPosts();
 	}
 
@@ -87,14 +95,25 @@ class ThemePage extends React.Component {
 				</div>
 			);
 		} else {
+			const styles = {
+				textAlign: 'center'
+			};
+
+			const textStyle = {
+				textAlign: 'center'
+			};
+
 			return (
 				<div>
-					<img alt='Sad meme' src='../ysuv0.jpg' />
-					<p>Oops! There are no posts yet!</p>
+					<div style={styles}>
+						<Image src={require('../ysuv0.jpg')} roundedCircle />
+
+						<h3 style={textStyle}>Oops! There are no posts yet!</h3>
+					</div>
 				</div>
 			);
 		}
 	}
 }
 
-export default ThemePage;
+export default withRouter(ThemePage);
