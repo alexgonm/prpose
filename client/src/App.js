@@ -34,7 +34,7 @@ class App extends Component {
 						<Route path='/signup' component={SignUpForm} />
 						<Route
 							path='/p/:postId'
-							render={props => <PostPage {...props} />}
+							render={props => <PostPage postId={props} />}
 						/>
 						<Route
 							path='/t/:theme'

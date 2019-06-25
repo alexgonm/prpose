@@ -18,17 +18,13 @@ class DeleteButton extends Component {
 	}
 
 	isLoggedIn() {
-		console.log('io');
 		isUserLoggedIn()
 			.then(response => {
-				console.log('fff');
-				console.log(response.data);
 				if (response.data.username === this.state.username) {
 					this.setState({
 						isLoggedIn: true
 					});
 				}
-				console.log(this.state.isLoggedIn);
 			})
 			.catch(err => {
 				if (err.response) {
@@ -40,12 +36,13 @@ class DeleteButton extends Component {
 	}
 
 	delete() {
-		console.log('suppression');
-		deleteElement(this.state.type, this.state.id).then(response => {
-			if (response.status === 200) {
-				this.props.history.push('/');
-			}
-		});
+		deleteElement(this.state.type, this.state.id)
+			.then(response => {
+				if (response.status === 200) {
+					this.props.history.push('/');
+				}
+			})
+			.catch(err => console.log(err));
 	}
 
 	componentDidMount() {

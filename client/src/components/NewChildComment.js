@@ -36,7 +36,7 @@ class NewChildComment extends Component {
 	}
 
 	handleSubmit(event) {
-		const postID = this.state.postId;
+		const postID = this.state.postID;
 		const parentId = this.state.parentId;
 		const commentContent = this.state.commentContent;
 		const informations = JSON.stringify({
@@ -51,10 +51,12 @@ class NewChildComment extends Component {
 				}
 			})
 			.catch(err => {
-				this.setState({
-					error: true
-				});
+				console.log(err);
 			});
+	}
+
+	componentDidMount() {
+		console.log(this.state.postID, 'post');
 	}
 
 	render() {
@@ -79,17 +81,18 @@ class NewChildComment extends Component {
 					onClick={this.handleClick}
 					style={{
 						width: '10em',
-						margin: '0 auto'
+						marginLeft: '2%',
+						marginRight: '2%',
+						maxWidth: '500px',
+						marginTop: '1%'
 					}}
 				>
-					New Comment?
+					REPLY
 				</Button>
 				<div>
 					<div style={openStyle}>
-						<h3 style={{ marginBottom: '3%' }}>Create a post</h3>
 						<Form onSubmit={this.handleSubmit}>
 							<Form.Group controlId='commentContent' size='lg'>
-								<Form.Label>Content</Form.Label>
 								<Form.Control
 									placeholder='Leave your thoughts'
 									onChange={this.handleChange}
@@ -103,7 +106,7 @@ class NewChildComment extends Component {
 								type='submit'
 								disabled={!this.validateForm()}
 							>
-								COMMENT
+								SEND
 							</Button>
 						</Form>
 					</div>

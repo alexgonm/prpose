@@ -1,16 +1,17 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom';
 import Post from '../components/Post';
 import Comment from '../components/Comment';
 import SortButton from '../components/SortButton';
 import NewComment from '../components/NewComment';
-import { getCommentsOfPost } from '../api/Requests';
+import { getPost, getCommentsOfPost } from '../api/Requests';
 
 class PostPage extends React.Component {
 	constructor(props) {
 		super();
 		this.state = {
-			id: props.location.state.postId,
-			parent: props.location.state.parentId,
+			id: props.match.params.postId,
+			parentId: '',
 			comments: [],
 			sortOptions: [
 				{
@@ -28,12 +29,28 @@ class PostPage extends React.Component {
 			],
 			sort: 'top'
 		};
+
+		this.getComments = this.getComments.bind(this);
+		this.handleSelect = this.handleSelect.bind(this);
+		this.getPost = this.getPost.bind(this);
+	}
+
+	getPost(postId) {
+		getPost(postId)
+			.then(response => {
+				this.setState({
+					post: <Post post={response.data[0]} />
+				});
+			})
+			.catch(err => {
+				console.log(err);
+			});
 	}
 
 	getComments(sortOption = this.state.sort) {
 		getCommentsOfPost(this.state.id, sortOption).then(response => {
 			const commentsToShow = response.data.map(comment => {
-				return <Comment comment={comment} />;
+				return <Comment key={comment.commentId} comment={comment} />;
 			});
 
 			this.setState({
@@ -46,10 +63,11 @@ class PostPage extends React.Component {
 		this.setState({
 			sort: value
 		});
-		this.getComments(value);
+		this.getComments(this.state.sort);
 	}
 
 	componentDidMount() {
+		this.getPost(this.state.id);
 		this.getComments();
 	}
 
@@ -65,13 +83,16 @@ class PostPage extends React.Component {
 		};
 		return (
 			<div>
-				<Post post={this.props.location.state} />
+				{this.state.post}
 				<NewComment
-					postId={this.state.id}
-					style={{ marginBottom: '2%', marginLeft: '2%' }}
+					postId={this.props.match.params.postId}
+					style={{ margin: '2%' }}
 				/>
 				<div style={commentsStyle}>
-					<SortButton buttons={this.state.sortOptions} />
+					<SortButton
+						buttons={this.state.sortOptions}
+						value={this.state.sort}
+					/>
 					{this.state.comments}
 				</div>
 			</div>
@@ -79,4 +100,4 @@ class PostPage extends React.Component {
 	}
 }
 
-export default PostPage;
+export default withRouter(PostPage);

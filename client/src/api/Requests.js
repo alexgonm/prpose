@@ -2,13 +2,6 @@ import API from './Api';
 
 function getPost(postId) {
 	return API.get(`/p/${postId}`);
-	// .then(response => {
-	// 	return response.data[0];
-	// })
-	// .catch(err => {
-	// 	console.log(err);
-	// 	return {};
-	// });
 }
 
 //Nouvelle publication

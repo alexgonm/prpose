@@ -72,8 +72,9 @@ class Post extends Component {
 			padding: '1%'
 		};
 		var afficherReduire;
+		const fullContent = this.state.content;
 		var contentToShow = this.state.content;
-		if (this.state.content.length > 500 && !this.state.showAll) {
+		if (fullContent.length > 500 && !this.state.showAll) {
 			contentToShow = this.state.content.substring(0, 500);
 		}
 		afficherReduire = this.state.showAll ? 'Réduire' : 'Afficher';
@@ -84,7 +85,9 @@ class Post extends Component {
 					<Link
 						to={{
 							pathname: `/p/${this.state.id}`,
-							state: this.props.post
+							state: {
+								postId: this.state.id
+							}
 						}}
 					>
 						{this.state.title}

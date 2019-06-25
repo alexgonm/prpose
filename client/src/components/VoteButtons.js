@@ -81,10 +81,11 @@ class UpvoteButton extends Component {
 		var buttonStyle = {};
 		if (this.state.type === 'c') {
 			buttonStyle = buttonStyle = {
-				borderBottomLeftRadius: 20,
-				borderTopLeftRadius: 0,
-				borderBottomRightRadius: 20,
-				borderTopRightRadius: 0
+				borderBottomLeftRadius: 0,
+				borderTopLeftRadius: 20,
+				borderBottomRightRadius: 0,
+				borderTopRightRadius: 20,
+				margin: '2%'
 			};
 		} else {
 			buttonStyle = {
