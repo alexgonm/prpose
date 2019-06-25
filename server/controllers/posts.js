@@ -29,46 +29,24 @@ const Post = {
 				);
 				break;
 			case 'top': //Tri par les publications avec le plus d'upvote
-				db.query(
-					'SELECT ??.*, u.positive, (t.total - u.positive) AS negative ' +
-						'FROM (??, ??, ??) ' +
-						'INNER JOIN (SELECT post_id, count(*) AS positive FROM post_vote WHERE post_vote.upvote = 1 GROUP BY post_id) u ON u.post_id = posts.post_id ' +
-						'INNER JOIN (SELECT post_id, count(*) AS total FROM post_vote GROUP BY post_id) t ON t.post_id = posts.post_id ' +
-						'WHERE ?? = ?? AND ?? = ?? AND ?? = ? ' +
-						'ORDER BY ?? DESC;',
-					[
-						'posts',
-						'posts',
-						'post_theme',
-						'themes',
-						'post_theme.post_id',
-						'posts.post_id',
-						'themes.theme',
-						'post_theme.theme',
-						'post_theme.theme',
-						req.params.theme,
-						'u.positive'
-					],
-					(err, rows) => {
-						if (err) {
-							console.log(err);
-							res.sendStatus(500);
-						}
-
-						const posts = rows.map(row => {
-							return {
-								postId: row.post_id,
-								parentId: row.post_parent_id,
-								username: row.username,
-								title: row.title,
-								content: row.content,
-								publicationDate: row.publication_date,
-								publicationHour: row.publication_hour
-							};
-						});
-						res.send(posts);
+				db.query('SELECT posts.*, count(post_vote.post_id) as upvotes FROM posts, post_vote WHERE posts.post_id = post_vote.post_id GROUP BY posts.post_id ORDER BY upvotes DESC', (err, rows) => {
+					if (err) {
+						console.log(err)
+						res.sendStatus(500)
 					}
-				);
+					const posts = rows.map(row => {
+						return {
+							postId: row.post_id,
+							parentId: row.post_parent_id,
+							username: row.username,
+							title: row.title,
+							content: row.content,
+							publicationDate: row.publication_date,
+							publicationHour: row.publication_hour
+						};
+					});
+					res.send(rows);
+				})
 				break;
 			default:
 			case 'best': //Tri par les publications les mieux votés par jour (en considérant le nombre total de votes et la part de votes positifs)
