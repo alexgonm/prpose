@@ -11,6 +11,7 @@ const Comment = {
 				return {
 					commentId: row.comment_id,
 					parentId: row.comment_id_parent,
+					postId: row.post_id,
 					username: row.username,
 					content: row.content,
 					publicationDate: row.publication_date,
@@ -34,6 +35,7 @@ const Comment = {
 					return {
 						commentId: row.comment_id,
 						parentId: row.comment_id_parent,
+						postId: row.post_id,
 						username: row.username,
 						content: row.content,
 						publicationDate: row.publication_date,
@@ -101,6 +103,7 @@ const Comment = {
 					return {
 						commentId: row.comment_id,
 						parentId: row.comment_id_parent,
+						postId: row.post_id,
 						username: row.username,
 						content: row.content,
 						publicationDate: row.publication_date,
@@ -226,7 +229,7 @@ const Comment = {
 				'content',
 				req.session.username,
 				req.body.postID,
-				req.body.commentID,
+				req.body.parentId,
 				req.body.commentContent
 			],
 			(err, rows) => {

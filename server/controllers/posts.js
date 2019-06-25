@@ -204,15 +204,20 @@ const Post = {
 				);
 				break;
 			default:
-			case 'best':
+			case 'top':
 				db.query(
-					'SELECT comments.*, u.positive, (t.total - u.positive) AS negative,  ((u.positive + 1.9208) / (u.positive + (t.total - u.positive)) - 1.96 * SQRT((u.positive * (t.total - u.positive)) / (u.positive + (t.total - u.positive)) + 0.9604) /(u.positive + (t.total - u.positive))) / (1 + 3.8416 / ( u.positive +  (t.total - u.positive))) AS ci_lower_bound ' +
-						'FROM comments, posts ' +
-						'INNER JOIN (SELECT comment_id, count(*) AS positive FROM comment_vote WHERE comment_vote.upvote = 1 GROUP BY comment_id) u ON u.comment_id = comments.comment_id ' +
-						'INNER JOIN (SELECT comment_id, count(*) AS total from comment_vote GROUP BY comment_id) t ON t.comment_id = comments.comment_id ' +
-						'WHERE  comments.post_id = posts.post_id AND comments.comment_id_parent = NULL AND comments.post_id = ? AND (u.positive + (t.total - u.positive) > 0) ' +
-						'ORDER BY ci_lower_bound DESC;',
-					[req.params.postID],
+					'SELECT ??.* FROM ??, ?? INNER JOIN (SELECT comment_id, count(*) AS positive FROM comment_vote WHERE comment_vote.upvote = 1 GROUP BY comment_id) u ON u.comment_id = comments.comment_id  WHERE ?? = ?? AND ?? = ?? AND ?? = ? ' +
+						''[
+							('comments',
+							'comments',
+							'posts',
+							'posts.post_id',
+							'comments.post_id',
+							'comments.comment_id_parent',
+							'NULL',
+							'comments.post_id',
+							req.params.postID)
+						],
 					(err, rows) => {
 						if (err) {
 							console.log(err);

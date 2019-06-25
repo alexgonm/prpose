@@ -102,11 +102,10 @@ const Auth = {
 		}
 	},
 	isLoggedIn: (req, res) => {
-		if (
-			req.session.isLoggedIn &&
-			req.session.username === req.body.username
-		) {
-			res.sendStatus(200);
+		if (req.session.isLoggedIn) {
+			const username = req.session.username;
+			const infoToSend = JSON.stringify({ username });
+			res.send(infoToSend);
 		} else {
 			res.sendStatus(403);
 		}

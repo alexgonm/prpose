@@ -7,7 +7,7 @@ router
 		//res.setHeader('Content-Type', 'text/html');
 		res.sendStatus(200);
 	})
-	.post('/isLoggedIn', Auth.isLoggedIn)
+	.get('/isLoggedIn', Auth.isLoggedIn)
 	.route('/login')
 	.get((req, res) => {
 		if (req.session.isLoggedIn) {
